@@ -1,0 +1,38 @@
+---
+# advance
+- import_playbook: go_xxx.yml
+- import_playbook: lazygit.yml
+- import_playbook: gotests.yml
+- import_playbook: protobuf.yml
+
+- import_playbook: shell.yml
+- import_playbook: firefox.yml
+- import_playbook: fzf.yml
+- import_playbook: nodejs.yml
+- import_playbook: vim.yml
+- import_playbook: alacritty.yml # 用户配置
+- import_playbook: lf.yml
+- import_playbook: script.yml
+- import_playbook: front.yml
+- import_playbook: st.yml
+- import_playbook: lock.yml
+- import_playbook: compton.yml
+- import_playbook: dmenu.yml
+- import_playbook: dwm.yml
+- import_playbook: theme.yml
+- import_playbook: ocr.yml
+- import_playbook: input_method.yml
+- import_playbook: transmit.yml
+- import_playbook: chrome.yml
+- import_playbook: music.yml
+- import_playbook: office.yml
+- import_playbook: etcd.yml
+  #- import_playbook: wemeet.yml
+  #- import_playbook: goland.yml
+  #- import_playbook: webstorm.yml
+  #- import_playbook: vscode.yml
+  #- import_playbook: charles.yml
+  #- import_playbook: drawio.yml
+
+- import_playbook: finish.yml
+

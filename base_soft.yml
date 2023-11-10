@@ -1,0 +1,96 @@
+---
+- name: 安装基础软件
+  hosts: ubuntu_22
+  become: yes  # 使用sudo权限
+  any_errors_fatal: true
+  tasks:
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600 # 若1小时内更新过缓存，就不再更新
+
+    - name: 安装基础软件
+      apt:
+        name:
+          - git
+          - wget
+          - curl
+          - p7zip-full
+          - figlet # 字符画图
+          #- manpages-zh # 中文man手册
+          #- redis-server
+          #- imagemagick
+          #- w3m # 图片预览
+          #- ueberzug # 图片预览
+          #- maple # 数学
+          #- speedtest-cli # 网络测速工具
+          #- xDroid # 手机虚拟机
+          #- genymotion # 手机虚拟机
+          #- zathura # pdf
+          #- xournal # pdf
+          #- mupdf # pdf
+          #- sumatrapdf # pdf
+          #- okular # pdf
+          - tree # 树形显示目录
+          #- variety # change black ground automaticly
+          #- kchmviewer # 打开chm格式的文件
+          #- typora # 打开md格式的文件
+          #- kdenlive # 视频播放器
+          - mpv
+          #- gimp # picture factory
+          #- transmission # download
+          #- neofetch # 显示系统信息
+          #- mtr # 网络链接测试包含：ping, tracert and nslookup
+          #- screenkey # 显示按下的按键
+          - simplescreenrecorder # 录屏
+          #- xorg # 硬件修改
+          #- virtualbox # 虚拟机
+          #- wmware # 虚拟机
+          #- dunst # 通知
+          # 云同步
+          #- nutstore
+          #- dropbox
+          # 剪切板
+          # copyq
+          - xsel
+          # 键盘映射
+          #- xmodmap
+          #- xev # 显示按键码
+          #- trayer # system table
+          #- sensors # cpu
+          # 邮件
+          #- mutt
+          # 天气
+          #- wttr.in
+          # 远程控制
+          - remmina
+          # 数据库设计
+          #- pdman
+          #- powerdesigner
+          # kvm
+          - virt-manager
+          - libvirt-daemon
+          - libvirt-clients
+          - openssh-server
+        state: present
+      ignore_errors: true
+
+    - name: 删除多余软件
+      apt:
+        name:
+          - vim-tiny
+          - ed
+          - nano
+          - gedit
+          - gnome-disk-utility
+          - evince
+          - eog
+          #- gnome-screenshot
+          #- ibus-stable
+        state: absent
+
+    - name: autoremove
+      command:
+        cmd: apt-get autoremove -y
+        warn: false
+

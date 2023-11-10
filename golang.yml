@@ -1,0 +1,100 @@
+---
+- name: 安装golang
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除原来golang的sdk、数据目录
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/usr/local/go"
+        - "/opt/go/src/example"
+
+          #- name: 生成golang的SDK目录
+          #  file:
+          #    path: "/usr/local/go/"
+          #    state: directory
+          #    mode: '0755'
+
+    - name: 下载golang的sdk
+      get_url:
+        url: "{{ golang_sdk_url }}"
+        dest: "/tmp/go-sdk.tar.gz"
+        mode: '0644'
+          #owner: "{{ ansible_ssh_user }}"
+          #group: "{{ ansible_ssh_user }}"
+
+    - name: 解压golang的sdk
+      ansible.builtin.unarchive:
+        src: "/tmp/go-sdk.tar.gz"
+        dest: "/usr/local/"
+        remote_src: yes
+
+    - name: 删除下载golang的压缩包
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/go-sdk.tar.gz"
+
+    - name: 配置golang环境变量
+      blockinfile:
+        path: "/etc/profile"
+        block: |
+          export GOROOT=/usr/local/go
+          export PATH=$PATH:$GOROOT/bin
+          export GOPATH=/opt/go/
+          export PATH=$PATH:$GOPATH/bin
+          export GO111MODULE=auto
+          export GOPROXY=https://goproxy.cn,direct
+          export GONOPROXY=git.tencent.com,git.code.tencent.com
+        marker: "# {mark} golang BLOCK"
+        create: yes
+
+          #- name: 配置golang的env
+          #  command:
+          #    cmd: "{{ item }}"
+          #    chdir: "/"
+          #  loop:
+          #    - "/usr/local/go/bin/go env -w GO111MODULE=auto"
+          #    - "/usr/local/go/bin/go env -w GOPROXY=https://goproxy.cn,direct"
+          #    - "/usr/local/go/bin/go env -w GONOPROXY=git.tencent.com,git.code.tencent.com"
+          #  become_user: "{{ ansible_ssh_user }}"
+
+    - name: 检查golang的工作目录是否存在
+      stat:
+        path: "/opt/go"
+      register: dir_status
+
+    - name: 备份golang的工作目录
+      command:
+        cmd: "mv /opt/go /opt/go_path_backup_{{ ansible_date_time.iso8601_basic_short }}"
+      when: dir_status.stat.exists
+
+    - name: 生成golang的工作目录
+      file:
+        path: "/opt/go/src/example/"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0700'
+
+    - name: 生成golang的工具目录
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0775'
+      loop:
+        - "/opt/go/bin"
+        - "/opt/go/pkg"
+
+    - name: 配置golang的demo项目
+      command:
+        cmd: "/usr/local/go/bin/go mod init example"
+        chdir: "/opt/go/src/example/"
+      become_user: "{{ ansible_ssh_user }}"
+

@@ -1,0 +1,189 @@
+---
+- name: 配置theme
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 安装主体控制工具
+      apt:
+        name:
+          - lxappearance
+          - qt5ct
+        state: present
+        update_cache: yes
+        cache_valid_time: 3600
+
+#echo "##  lxappearance
+####   Widget
+#yaru-viridian-dark / yaru-purple-dark / yaru-prussiangreen-dark / adwaita-dark
+####   Icon Theme
+#like Widget / oxygen / breeze dark / yaru.
+####   mouse cursor
+#DMZ(black) / redglass
+####   Apply
+#" >> $myManual
+    - name: 配置gtk2
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.gtkrc-2.0"
+        block: |
+          # DO NOT EDIT! This file will be overwritten by LXAppearance.
+          # Any customization should be done in ~/.gtkrc-2.0.mine instead.
+
+          include "{{ ansible_ssh_user_home }}/.gtkrc-2.0.mine"
+          gtk-theme-name="Yaru-viridian-dark"
+          gtk-icon-theme-name="Yaru-viridian-dark"
+          gtk-font-name="Sans 20"
+          gtk-cursor-theme-name="DMZ-Black"
+          gtk-cursor-theme-size=0
+          gtk-toolbar-style=GTK_TOOLBAR_ICONS
+          gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+          gtk-button-images=1
+          gtk-menu-images=0
+          gtk-enable-event-sounds=1
+          gtk-enable-input-feedback-sounds=1
+          gtk-xft-antialias=1
+          gtk-xft-hinting=1
+          gtk-xft-hintstyle="hintfull"
+        marker: "# {mark} lxappearance BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置gtk3
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.config/gtk-3.0/settings.ini"
+        block: |
+          [Settings]
+          gtk-theme-name=Yaru-viridian-dark
+          gtk-icon-theme-name=Yaru-viridian-dark
+          gtk-font-name=Sans 20
+          gtk-cursor-theme-name=DMZ-Black
+          gtk-cursor-theme-size=0
+          gtk-toolbar-style=GTK_TOOLBAR_ICONS
+          gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+          gtk-button-images=1
+          gtk-menu-images=0
+          gtk-enable-event-sounds=1
+          gtk-enable-input-feedback-sounds=1
+          gtk-xft-antialias=1
+          gtk-xft-hinting=1
+          gtk-xft-hintstyle=hintfull
+        marker: "# {mark} lxappearance BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 创建icons壁纸目录
+      file:
+        path: "{{ ansible_ssh_user_home }}/.icons/default"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0775'
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置icons
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.icons/default/index.theme"
+        block: |
+          # This file is written by LXAppearance. Do not edit.
+          [Icon Theme]
+          Name=Default
+          Comment=Default Cursor Theme
+          Inherits=DMZ-Black
+        marker: "# {mark} lxappearance BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置时间
+      shell:
+        cmd: "/usr/bin/date +%s > {{ ansible_ssh_user_home }}/.cache/tracker3/files/last-crawl.txt"
+        chdir: "{{ ansible_ssh_user_home }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+#echo "##  qt5ct
+####   appearance
+#* style : window
+#* Standard dialogs : GTK3
+#* Palette : custom
+#* Color scheme : darker
+####   fonts
+#* General : Source Code Pro, medium / reglar / black / light, 20
+#* Fixed width : Source Code Pro, medium/reglar/black/light, 20
+####   Apply
+#" >> $myManual
+    - name: 创建icons壁纸目录
+      file:
+        path: "{{ ansible_ssh_user_home }}/.config/qt5ct"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0775'
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置qt5ct配置
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.config/qt5ct/qt5ct.conf"
+        block: |
+          # This file is written by LXAppearance. Do not edit.
+          [Appearance]
+          color_scheme_path=/usr/share/qt5ct/colors/darker.conf
+          custom_palette=true
+          standard_dialogs=gtk3
+          style=Windows
+
+          [Fonts]
+          fixed=@Variant(\0\0\0@\0\0\0\x1e\0S\0o\0u\0r\0\x63\0\x65\0 \0\x43\0o\0\x64\0\x65\0 \0P\0r\0o@4\0\0\0\0\0\0\xff\xff\xff\xff\x5\x1\0\x39\x10)
+          general=@Variant(\0\0\0@\0\0\0\x1e\0S\0o\0u\0r\0\x63\0\x65\0 \0\x43\0o\0\x64\0\x65\0 \0P\0r\0o@4\0\0\0\0\0\0\xff\xff\xff\xff\x5\x1\0\x39\x10)
+
+          [Interface]
+          activate_item_on_single_click=1
+          buttonbox_layout=0
+          cursor_flash_time=1000
+          dialog_buttons_have_icons=1
+          double_click_interval=400
+          gui_effects=@Invalid()
+          keyboard_scheme=2
+          menus_have_icons=true
+          show_shortcuts_in_context_menus=true
+          stylesheets=@Invalid()
+          toolbutton_style=4
+          underline_shortcut=1
+          wheel_scroll_lines=3
+
+          [SettingsWindow]
+          geometry=@ByteArray(\x1\xd9\xd0\xcb\0\x3\0\0\0\0\0\n\0\0\0\n\0\0\x3\xe4\0\0\x4-\0\0\0\n\0\0\0\n\0\0\x3\xe4\0\0\x4-\0\0\0\0\0\0\0\0\a\x80\0\0\0\n\0\0\0\n\0\0\x3\xe4\0\0\x4-)
+
+          [Troubleshooting]
+          force_raster_widgets=1
+          ignored_applications=@Invalid()
+        marker: "# {mark} qt5ct BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置时间2
+      shell:
+        cmd: "/usr/bin/date +%s > {{ ansible_ssh_user_home }}/.cache/tracker3/files/last-crawl.txt"
+        chdir: "{{ ansible_ssh_user_home }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置QT主题模块
+      blockinfile:
+        path: "/etc/profile"
+        block: |
+          export QT_QPA_PLATFORMTHEME=qt5ct
+        marker: "# {mark} qt5ct BLOCK"
+        create: yes
+
+#qt5-styleplugins
+#xsettingsd

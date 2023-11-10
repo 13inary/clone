@@ -1,0 +1,68 @@
+---
+- name: 部署qrcp
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的qrcp
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/qrcp.deb"
+        - "{{ ansible_ssh_user_home }}/.config/qrcp"
+
+    - name: 下载qrcp
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "{{ qrcp_deb_url }}"
+        wget_dir: "/tmp/qrcp.deb"
+
+    - name: 安装qrcp
+      ansible.builtin.apt:
+        deb: "/tmp/qrcp.deb"
+
+#echo "##  qrcp config
+#* Choose interface:
+#* Choose fully-qualified domain name:
+#* Choose port, 0 means random port:
+#* Choose default output directory for received files, empty does not set a default:
+#* Choose path, empty means random:
+#* Should the server keep alive after transferring?: Yes
+#* Should files be securely transferred with HTTPS?: No
+#* Choose TLS certificate path. Empty if not using HTTPS.:
+#* Choose TLS certificate key. Empty if not using HTTPS.:
+#" >> $myManual
+
+    - name: 创建qrcp配置目录
+      file:
+        path: "{{ ansible_ssh_user_home }}/.config/qrcp"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0775'
+      become_user: "{{ ansible_ssh_user }}"
+
+        #- name: 收集网卡信息
+        #  setup:
+
+        #- name: 输出网卡信息（ip r | head -1 | awk '{print $5}'）
+        #  debug:
+        #    var: ansible_interfaces
+
+    - name: 收集网卡数据
+      shell: ip r | head -1 | awk '{print $5}'
+      register: ipr_output
+
+    - name: 输出网卡信息
+      debug:
+        var: ipr_output.stdout_lines
+
+    - name: 配置qrcp配置
+      template:
+        src: ./pkg/qrcp.json
+        dest: "{{ ansible_ssh_user_home }}/.config/qrcp/config.json"
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"

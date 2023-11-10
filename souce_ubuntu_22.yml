@@ -1,0 +1,93 @@
+---
+- name: 配置ubuntu 22软件源
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 检查是否有备份的软件源
+      stat:
+        path: /etc/apt/sources.list.bak
+      register: backup_exist
+
+    - name: 备份软件源
+      copy:
+        src: /etc/apt/sources.list
+        dest: /etc/apt/sources.list.bak
+      when: not backup_exist.stat.exists
+
+    - name: 更新软件源文件
+      copy:
+        content: |
+          # deb cdrom:[Ubuntu 22.04.1 LTS _Jammy Jellyfish_ - Release amd64 (20220809.1)]/ jammy main restricted
+
+          # See http://help.ubuntu.com/community/UpgradeNotes for how to upgrade to
+          # newer versions of the distribution.
+          deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted
+          # deb-src http://cn.archive.ubuntu.com/ubuntu/ jammy main restricted
+
+          ## Major bug fix updates produced after the final release of the
+          ## distribution.
+          deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted
+          # deb-src http://cn.archive.ubuntu.com/ubuntu/ jammy-updates main restricted
+
+          ## N.B. software from this repository is ENTIRELY UNSUPPORTED by the Ubuntu
+          ## team. Also, please note that software in universe WILL NOT receive any
+          ## review or updates from the Ubuntu security team.
+          deb http://mirrors.aliyun.com/ubuntu/ jammy universe
+          # deb-src http://cn.archive.ubuntu.com/ubuntu/ jammy universe
+          deb http://mirrors.aliyun.com/ubuntu/ jammy-updates universe
+          # deb-src http://cn.archive.ubuntu.com/ubuntu/ jammy-updates universe
+
+          ## N.B. software from this repository is ENTIRELY UNSUPPORTED by the Ubuntu
+          ## team, and may not be under a free licence. Please satisfy yourself as to
+          ## your rights to use the software. Also, please note that software in
+          ## multiverse WILL NOT receive any review or updates from the Ubuntu
+          ## security team.
+          deb http://mirrors.aliyun.com/ubuntu/ jammy multiverse
+          # deb-src http://cn.archive.ubuntu.com/ubuntu/ jammy multiverse
+          deb http://mirrors.aliyun.com/ubuntu/ jammy-updates multiverse
+          # deb-src http://cn.archive.ubuntu.com/ubuntu/ jammy-updates multiverse
+
+          ## N.B. software from this repository may not have been tested as
+          ## extensively as that contained in the main release, although it includes
+          ## newer versions of some applications which may provide useful features.
+          ## Also, please note that software in backports WILL NOT receive any review
+          ## or updates from the Ubuntu security team.
+          deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse
+          # deb-src http://cn.archive.ubuntu.com/ubuntu/ jammy-backports main restricted universe multiverse
+
+          deb http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted
+          # deb-src http://security.ubuntu.com/ubuntu jammy-security main restricted
+          deb http://mirrors.aliyun.com/ubuntu/ jammy-security universe
+          # deb-src http://security.ubuntu.com/ubuntu jammy-security universe
+          deb http://mirrors.aliyun.com/ubuntu/ jammy-security multiverse
+          # deb-src http://security.ubuntu.com/ubuntu jammy-security multiverse
+
+          # This system was installed using small removable media
+          # (e.g. netinst, live or single CD). The matching "deb cdrom"
+          # entries were disabled at the end of the installation process.
+          # For information about how to configure apt package sources,
+          # see the sources.list(5) manual.
+        dest: /etc/apt/sources.list
+      register: copy_result
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600 # 若1小时内更新过缓存，就不再更新
+      when: copy_result.changed
+      register: update_result
+
+    - name: 更新所有软件
+      apt:
+        upgrade: dist
+      when: update_result.changed
+
+    - name: 未知仓库
+      ansible.builtin.command:
+        cmd: add-apt-repository ppa:aslatter/ppa -y #sudo add-apt-repository ppa:mmstick76/alacritty
+
+    - name: 删除未知仓库
+      ansible.builtin.command:
+        cmd: add-apt-repository –remove ppa:aslatter/ppa
+      when: false

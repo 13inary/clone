@@ -1,0 +1,36 @@
+---
+- name: 部署script
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的script
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /opt/script
+
+    - name: 下载script
+      include_tasks: util_git_clone_root.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/script.git"
+        git_repo_dir: "/opt/script"
+
+    - name: 配置script
+      blockinfile:
+        path: "/etc/profile"
+        block: |
+          export PATH=$PATH:/opt/script/bin/
+        marker: "# {mark} script BLOCK"
+        create: yes
+
+    - name: 安装SCVPN
+      ansible.builtin.copy:
+        src: ./pkg/SCVPN
+        dest: /opt/script/bin/SCVPN
+        #owner: "{{ ansible_ssh_user }}"
+        #group: "{{ ansible_ssh_user }}"
+        mode: '0755'
+      #become_user: "{{ ansible_ssh_user }}"
+

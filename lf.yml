@@ -1,0 +1,142 @@
+---
+- name: 部署lf
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 卸载旧的lf依赖
+      apt:
+        name:
+          - fzf
+          - libmagic-dev
+          - ffmpegthumbnailer
+          - python3-pip
+          - atool # archive
+          #- batcat # text
+          #- highlight
+          #- pdftoppm
+          #- poppler-utils
+        state: absent
+      when: false
+
+    - name: 卸载残留的ctpv
+      command:
+        cmd: "/usr/bin/make uninstall"
+        chdir: "/tmp/ctpv"
+      ignore_errors: true
+
+    - name: 删除残留的lf配置
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_ssh_user_home }}/.config/lf"
+        - /tmp/ctpv
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装lf依赖
+      apt:
+        name:
+          - fzf
+          - libmagic-dev
+          - ffmpegthumbnailer
+          - python3-pip # 安装ueberzug
+          #- highlight
+          #- pdftoppm
+          #- poppler-utils
+        state: present
+
+    - name: 下载lf图片预览器
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/NikitaIvanovV/ctpv"
+        git_repo_dir: "/tmp/ctpv"
+
+    - name: 安装lf图片预览器step1
+      command:
+        cmd: "/usr/bin/make"
+        chdir: "/tmp/ctpv"
+
+    - name: 安装lf图片预览器step2
+      command:
+        cmd: "/usr/bin/make install"
+        chdir: "/tmp/ctpv"
+          #become_user: "{{ ansible_ssh_user }}" # 不能使用这个
+
+    - name: 安装ueberzug
+      ansible.builtin.pip:
+        name: ueberzug
+          #extra_args: '-i https://pypi.tuna.tsinghua.edu.cn/simple/ --trusted-host pypi.tuna.tsinghua.edu.cn'
+        extra_args: '-i http://pypi.doubanio.com/simple/ --trusted-host pypi.doubanio.com '
+          #extra_args: '-i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com'
+          #extra_args: '-i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com'
+          #extra_args: '-i https://pypi.mirrors.ustc.edu.cn/simple/ --trusted-host pypi.mirrors.ustc.edu.cn'
+          #extra_args: '-i http://pypi.mirrors.ustc.edu.cn/simple/ --trusted-host pypi.mirrors.ustc.edu.cn'
+      environment:
+        HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+
+      #git clone https://github.com/seebye/ueberzug
+      #cd ueberzug
+      #git checkout tags/18.1.9
+      #python3 setup.py install --user
+      #python3 -m site --user-base
+      #export PATH="$HOME/.local/bin:$PATH"
+      #
+      #find ~/.local/ -name '*ueberzug*'
+      #rm -rf
+      #vim ~/.local/lib/python3.x/site-packages/easy-install.pth
+      #find ~/.local/lib/python3.x/ -name '*.pyc' -delete
+      #find ~/.local/lib/python3.x/ -name '__pycache__' -exec rm -rf {} +
+      
+    - name: 下载lf
+      command:
+        cmd: "/usr/local/go/bin/go get github.com/gokcehan/lf@latest"
+        chdir: "/opt/go/src/example/"
+      environment:
+        GOPATH: "/opt/go"
+        GOPROXY: "https://goproxy.cn,direct"
+        HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      become_user: "{{ ansible_ssh_user }}"
+      register: command_result
+      until: command_result.failed == false
+      retries: 3
+      delay: 3
+
+    - name: 安装lf
+      command:
+        cmd: '/usr/bin/env CGO_ENABLED=0 /usr/local/go/bin/go install -ldflags="-s -w" github.com/gokcehan/lf@latest'
+        chdir: "/opt/go/src/example/"
+      environment:
+        GOPATH: "/opt/go"
+        GOPROXY: "https://goproxy.cn,direct"
+        HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      become_user: "{{ ansible_ssh_user }}"
+      register: command_result
+      until: command_result.failed == false
+      retries: 3
+      delay: 3
+
+    - name: 下载lf的配置
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/lf.git"
+        git_repo_dir: "{{ ansible_ssh_user_home }}/.config/lf"
+
+    - name: 配置lf启动配置
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.bashrc"
+        block: |
+          LFCD="$HOME/.config/lf/lfcd.sh"
+          if [ -f "$LFCD" ]; then
+              source "$LFCD"
+              alias ra='lfcd'
+          fi
+        marker: "# {mark} lf BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"

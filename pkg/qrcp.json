@@ -1,0 +1,11 @@
+{
+    "fqdn": "",
+    "interface": "{{ ipr_output.stdout_lines[0] }}",
+    "port": 0,
+    "keepAlive": true,
+    "path": "",
+    "secure": false,
+    "tls-key": "",
+    "tls-cert": "",
+    "output": ""
+}

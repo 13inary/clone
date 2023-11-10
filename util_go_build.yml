@@ -1,0 +1,18 @@
+---
+- name: go build {{ golang_dir }}
+  command:
+    cmd: "/usr/local/go/bin/go build"
+    chdir: "{{ golang_dir }}"
+  environment:
+    GOPATH: "/opt/go"
+    GOPROXY: "https://goproxy.cn,direct"
+    HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+  become_user: "{{ ansible_ssh_user }}"
+  register: command_result
+  until: command_result.failed == false
+  retries: 3
+  delay: 3
+
+    #- name: 输出golang编译结果
+    #  debug:
+    #    msg: "{{ command_result }}"

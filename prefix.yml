@@ -1,0 +1,11 @@
+---
+# prefix
+- import_playbook: souce_ubuntu_22.yml
+- import_playbook: base_soft.yml
+- import_playbook: wget.yml
+- import_playbook: git.yml
+- import_playbook: clash.yml
+- import_playbook: golang.yml
+
+- import_playbook: finish.yml
+

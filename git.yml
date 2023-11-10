@@ -1,0 +1,84 @@
+---
+- name: 配置git
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 安装git
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+        cache_valid_time: 3600 # 若1小时内更新过缓存，就不再更新
+
+    - name: 修改git的当前用户全局配置
+      git_config:
+        scope: global
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+      loop:
+        - { name: 'user.name', value: 'iamclient' }
+        - { name: 'user.email', value: '936095897@qq.com' }
+        - { name: 'http.https://github.com.proxy', value: "{{ clash_proxy_url }}:{{ clash_proxy_port }}" }
+        #- { name: 'https.https://github.com.proxy', value: 'socks5://127.0.0.1:7891' }
+        - { name: 'url."git@git.tencent.com:".insteadOf', value: 'https://git.tencent.com/' }
+        - { name: 'url."git@git.code.tencent.com:".insteadOf', value: 'https://git.code.tencent.com/' }
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 修改git的root用户全局配置
+      git_config:
+        scope: global
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+      loop:
+        - { name: 'http.https://github.com.proxy', value: "{{ clash_proxy_url }}:{{ clash_proxy_port }}" }
+        #- { name: 'https.https://github.com.proxy', value: 'socks5://127.0.0.1:7891' }
+
+    - name: 配置~/.ssh/config
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.ssh/config"
+        block: |
+          Host github.com
+            #User git
+            #https://ipaddress.com/website/ssh.github.com => ssh.github.com
+            Hostname ssh.github.com
+            #PreferredAuthentications publickey`
+            IdentityFile ~/.ssh/github_rsa
+            #Port 443
+        marker: "# {mark} git BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "600"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 添加github.com到known hosts
+      known_hosts:
+        name: "github.com"
+        key: "{{ lookup('pipe', 'ssh-keyscan github.com') }}"
+        state: "present"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置私钥
+      copy:
+        src: "/path/to/your/private/key"
+        dest: "{{ ansible_ssh_user_home }}/.ssh/id_rsa"
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "600"
+      become_user: "{{ ansible_ssh_user }}"
+      when: false
+
+        #- name: 设置GIT_TERMINAL_PROMPT
+        #  lineinfile:
+        #    path: "/etc/profile"
+        #    line: "export GIT_TERMINAL_PROMPT=1"
+        #    create: yes
+
+    - name: 设置GIT_TERMINAL_PROMPT
+      blockinfile:
+        path: "/etc/profile"
+        block: |
+          export GIT_TERMINAL_PROMPT=1
+        marker: "# {mark} git BLOCK"
+        create: yes

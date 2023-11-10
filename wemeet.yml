@@ -1,0 +1,28 @@
+---
+- name: 部署wemeet
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的wemeet
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/wemeet.deb"
+
+    - name: 下载wemeet
+      get_url:
+        url: "{{ wemeet_deb_url }}"
+        dest: "/tmp/wemeet.deb"
+        mode: '0664'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+
+    - name: 安装wemeet
+      ansible.builtin.apt:
+        deb: "/tmp/wemeet.deb"
+
+

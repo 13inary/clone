@@ -1,0 +1,45 @@
+---
+- name: 部署st
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 卸载残留的st
+      command:
+        cmd: "/usr/bin/make uninstall"
+        chdir: "/tmp/st"
+      ignore_errors: true
+
+    - name: 删除残留的st源码
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/usr/local/bin/st"
+        - "/tmp/st"
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装st的依赖
+      apt:
+        name:
+          - make
+          - libxinerama-dev
+          - libcanberra-gtk-module
+          - libxft-dev
+        state: present
+
+    - name: 下载st
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/st.git"
+        git_repo_dir: "/tmp/st"
+
+    - name: 安装st
+      command:
+        cmd: "/usr/bin/make clean install"
+        chdir: "/tmp/st"
+          #become_user: "{{ ansible_ssh_user }}" # 不能使用这个

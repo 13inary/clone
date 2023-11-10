@@ -1,0 +1,31 @@
+---
+- name: 部署dmenu
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 卸载残留的dmenu
+      command:
+        cmd: "/usr/bin/make uninstall"
+        chdir: "/tmp/dmenu"
+      ignore_errors: true
+
+    - name: 删除残留的dmenu源码
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/dmenu"
+        - "/usr/local/bin/dmenu"
+
+    - name: 下载dmenu
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/dmenu.git" # albert ulauncher rofi
+        git_repo_dir: "/tmp/dmenu"
+
+    - name: 安装slock
+      command:
+        cmd: "/usr/bin/make clean install"
+        chdir: "/tmp/dmenu"
+          #become_user: "{{ ansible_ssh_user }}" # 不能使用这个

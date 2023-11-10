@@ -1,0 +1,211 @@
+---
+- name: 部署dwm
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 卸载残留的dwm
+      command:
+        cmd: "/usr/bin/make uninstall"
+        chdir: "/tmp/dwm"
+      ignore_errors: true
+
+    - name: 删除残留的dwm源码
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/dwm"
+        - "/usr/local/dwmScript"
+        - "{{ ansible_ssh_user_home }}/Pictures/wallpapers"
+        - "{{ ansible_ssh_user_home }}/Pictures/screenshot"
+        - "{{ ansible_ssh_user_home }}/.config/flameshot"
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装dwm的依赖
+      apt:
+        name:
+          - make
+          - libxinerama-dev
+          - libcanberra-gtk-module
+          - libxft-dev
+          - suckless-tools
+          - flameshot # 截图依赖
+          - scrot # 截图依赖
+          - feh # 图片管理器。其他工具：habak nitrogen
+          #- xsetroot # 状态栏控制。其他工具：dwmblocks
+          - brightnessctl # 亮度控制。其他工具：xbrightness light acpilight xbacklight xset
+          - redshift # 护眼模式
+          - alsa-utils # 音量控制。amixer aplay arecord alsamixer。其他工具：pamixer xfce4-volumed-pulse
+          - pavucontrol # 音量控制
+          - acpi # 电池控制。其他工具：acpitool xfce4-power-manager
+          - xdotool # 按键控制
+          - xinput # 触摸板控制
+          #- numlockx # 小键盘锁
+          #- wmname # 窗口管理器名字
+        state: present
+
+    - name: 下载dwm
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/dwm.git"
+        git_repo_dir: "/tmp/dwm"
+
+    - name: 安装dwm
+      command:
+        cmd: "/usr/bin/make clean install"
+        chdir: "/tmp/dwm"
+          #become_user: "{{ ansible_ssh_user }}" # 不能使用这个
+
+    - name: 安装dwm运行工具
+      command:
+        cmd: "cp -r /tmp/dwm/dwmScript /usr/local/dwmScript"
+
+    - name: 创建flameshot配置目录
+      file:
+        path: "{{ ansible_ssh_user_home }}/.config/flameshot"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0755'
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 创建flameshot配置
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.config/flameshot/flameshot.ini"
+        block: |
+          [General]
+          buttons=@Variant(\0\0\0\x7f\0\0\0\vQList<int>\0\0\0\0\t\0\0\0\x1\0\0\0\x2\0\0\0\x3\0\0\0\x5\0\0\0\x12\0\0\0\xf\0\0\0\x16\0\0\0\x13\0\0\0\x17)
+          contrastOpacity=188
+          drawColor=#ff00ff
+          filenamePattern=_%Y_%m_%d_%H_%M_%S
+          savePath={{ ansible_ssh_user_home }}/Pictures/screenshot
+          savePathFixed=true
+          showHelp=false
+        marker: "# {mark} flameshot BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "644"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 创建feh壁纸目录
+      file:
+        path: "{{ ansible_ssh_user_home }}/Pictures/wallpapers"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0755'
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置feh壁纸
+      ansible.builtin.copy:
+        src: ./pkg/bridge.jpg
+        dest: "{{ ansible_ssh_user_home }}/Pictures/wallpapers/bridge.jpg"
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0644'
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 创建flameshot、scrot截图目录
+      file:
+        path: "{{ ansible_ssh_user_home }}/Pictures/screenshot"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0755'
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置休眠、关机建
+      blockinfile:
+        path: "/etc/systemd/logind.conf"
+        block: |
+          HandlePowerKey=lock
+          HandleLidSwitch=lock
+          HandleLidSwitchExternalPower=loc
+        marker: "# {mark} power BLOCK"
+
+    - name: 将当前普通用户追加到视频组
+      ansible.builtin.user:
+        name: "{{ ansible_ssh_user }}"
+        groups: video
+        append: yes
+      when: ansible_ssh_user != "root"
+
+    - name: 配置startx
+      blockinfile:
+        path: "/etc/X11/xinit/xinitrc"
+        block: |
+          wmname LG3D
+          exec dwm
+        marker: "# {mark} wm BLOCK"
+        create: yes
+
+    - name: 配置dwm登录页面入口
+      command:
+        cmd: cp -r /tmp/dwm/dwm.desktop /usr/share/xsessions/dwm.desktop
+
+    - name: 配置登陆终端启动startx（检查是否对ssh有影响）
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.bash_login"
+        block: |
+          startx
+        marker: "# {mark} dwm BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置开机终端的样式（TODO 还存在重复写）
+      blockinfile:
+        path: "/etc/default/console-setup"
+        block: |
+          [General]
+          # CONFIGURATION FILE FOR SETUPCON
+
+          # Consult the console-setup(5) manual page.
+
+          ACTIVE_CONSOLES="/dev/tty[1-6]"
+
+          CHARMAP="UTF-8"
+
+          CODESET="guess"
+          FONTFACE="Fixed"
+          #FONTSIZE="8x16"
+          FONTSIZE="16x32"
+
+          VIDEOMODE=
+
+          # The following is an example how to use a braille font
+          # FONT='lat9w-08.psf.gz brl-8x8.psf'
+        marker: "# {mark} custom BLOCK"
+        create: yes
+        mode: "644"
+
+    - name: 配置输入法
+      blockinfile:
+        path: "/etc/profile"
+        block: |
+          export GTK_IM_MODULE=ibus
+          export QT_IM_MODULE=ibus
+          export XMODIFIERS="@im=ibus"
+        marker: "# {mark} input method BLOCK"
+        create: yes
+
+    - name: 兼容java环境
+      blockinfile:
+        path: "/etc/profile"
+        block: |
+          export _JAVA_AWT_WM_NONREPARENTING=1
+          export AWT_TOOLKIT=MToolkit
+        marker: "# {mark} java BLOCK"
+        create: yes
+
+    - name: 设置开机进入命令行界面（startx启动图形化）
+      ansible.builtin.systemd:
+        default_target: multi-user.target # 图形化界面：graphical.target（ctrl+alt+F1~F6进入终端）
+      when: false

@@ -1,0 +1,36 @@
+---
+- name: 部署office
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的office
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/office.deb"
+        - /usr/share/fonts/wps-office
+
+    - name: 下载office
+      get_url:
+        url: "{{ office_deb_url }}"
+        dest: "/tmp/office.deb"
+        mode: '0664'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 安装office
+      ansible.builtin.apt:
+        deb: "/tmp/office.deb"
+
+    - name: 创建office字体目录
+      file:
+        path: /usr/share/fonts/wps-office
+        state: directory
+
+    - name: 解压office的字体
+      ansible.builtin.unarchive:
+        src: ./pkg/wps-office-font.zip
+        dest: /usr/share/fonts/wps-office

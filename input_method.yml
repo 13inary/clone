@@ -1,0 +1,63 @@
+---
+- name: 部署输入法
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装ibus
+      apt:
+        name:
+          #- fcitx
+          - ibus
+          - ibus-data
+          - ibus-gtk
+          - ibus-gtk3
+          - ibus-gtk4
+          - ibus-libpinyin
+          #- ibus-pinyin
+          #- ibus-sunpinyin
+          - dconf-editor # gsettings https://segmentfault.com/a/1190000019968756?utm_source=tag-newest
+        state: present
+
+# === config ===
+#echo "##  ibus-setup
+####   general
+#* Next input method : <control>space
+#* Show icon on system tray : [ ]
+#* Use custom font : Source Code Pro Medium 22
+####   input method
+#* Add
+#english english(us), chinese-pinyin
+#" >> $myManual
+    - name: 配置ibus
+      command:
+        cmd: "{{ item }}"
+      become_user: "{{ ansible_ssh_user }}"
+      loop:
+        - dconf write /desktop/ibus/engine/sunpinyin/keyboard/modeswitch '"None"'
+        #- dconf write /desktop/ibus/engine/sunpinyin/keyboard/modeswitch '"Shift"' # 恢复ibus-setup可以打开
+        - dconf dump /desktop/ibus/engine/sunpinyin/keyboard/
+
+        - dconf write /desktop/ibus/general/hotkey/triggers '["<Control>space"]'
+        - dconf dump /desktop/ibus/general/hotkey/
+
+        - dconf write /desktop/ibus/general/engines-order '["xkb:us::eng", "sunpinyin"]'
+        - dconf write /desktop/ibus/general/preload-engines '["xkb:us::eng", "sunpinyin"]'
+        - dconf dump /desktop/ibus/general/
+
+        - dconf write /desktop/ibus/panel/lookup-table-orientation 0
+        - dconf write /desktop/ibus/panel/custom-font '"Source Code Pro Medium 22"'
+        - dconf write /desktop/ibus/panel/show-icon-on-systray false
+        - dconf write /desktop/ibus/panel/use-custom-font true
+        - dconf dump /desktop/ibus/panel/
+
+        #- dconf write /desktop/ibus/engine/sunpinyin/quanpin/autocorrection/enabled true
+        #- dconf write /desktop/ibus/engine/sunpinyin/quanpin/fuzzy/enabled true
+        #- dconf write /desktop/ibus/engine/sunpinyin/quanpin/fuzzysegs/enabled true
+        #- dconf write /desktop/ibus/engine/sunpinyin/quanpin/innerfuzzy/enabled true
+

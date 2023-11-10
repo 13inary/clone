@@ -1,0 +1,27 @@
+---
+- name: 部署etcd
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装etcd
+      apt:
+        name:
+          - etcd
+        state: present
+
+    - name: 配置etcd
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.bashrc"
+        block: |
+          export ETCDCTL_API=3
+        marker: "# {mark} etcd BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"

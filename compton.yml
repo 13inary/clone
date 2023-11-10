@@ -1,0 +1,38 @@
+---
+- name: 部署compton
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 卸载旧的compton
+      apt:
+        name:
+          - compton
+        state: absent
+
+    - name: 删除残留的compton
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_ssh_user_home }}/.config/compton-config"
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装compton
+      apt:
+        name:
+          - compton # xcompmgr picom
+          #- libxcomposite-dev libxdamage-dev libconfig-dev libdbus-1-dev libdrm-dev libgl-dev libpcre3-dev asciidoc # 依赖
+        state: present
+
+    - name: 下载compton的配置
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/compton-config.git"
+        git_repo_dir: "{{ ansible_ssh_user_home }}/.config/compton-config" # --no-startup-id compton --config ~/.config/compton/compton.conf
+
+

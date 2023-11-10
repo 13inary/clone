@@ -1,0 +1,46 @@
+---
+- name: 部署font
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的font
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/source-code-pro
+        - /usr/share/fonts/opentype/source-code-pro
+        - /usr/share/fonts/truetype/source-code-pro
+
+    - name: 下载font
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/adobe-fonts/source-code-pro.git"
+        git_repo_dir: "/tmp/source-code-pro"
+
+    - name: 创建font目录
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /usr/share/fonts/opentype/source-code-pro # /usr/local/share/fonts/ ~/.fonts/
+        - /usr/share/fonts/truetype/source-code-pro # /usr/local/share/fonts/ ~/.fonts/
+
+    - name: 安装font的OTF字体
+      ansible.builtin.copy:
+        src: /tmp/source-code-pro/OTF/
+        dest: /usr/share/fonts/opentype/source-code-pro/
+        remote_src: yes
+
+    - name: 安装font的TTF字体
+      ansible.builtin.copy:
+        src: /tmp/source-code-pro/TTF/
+        dest: /usr/share/fonts/truetype/source-code-pro/
+        remote_src: yes
+
+    - name: 刷新font缓存
+      command:
+        cmd: fc-cache -f -v
+

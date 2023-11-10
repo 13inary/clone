@@ -1,0 +1,19 @@
+---
+- name: git clone {{ git_repo_url }} {{ git_repo_dir }}
+  git:
+    repo: '{{ git_repo_url }}'
+    dest: '{{ git_repo_dir }}' # 末尾是目标项目名
+    clone: yes
+    update: yes
+  environment:
+    HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+  register: command_result
+  until: command_result.failed == false
+  retries: 3
+  delay: 3
+
+    #- name: 输出git克隆结果
+    #  debug:
+    #    msg: "{{ command_result }}"

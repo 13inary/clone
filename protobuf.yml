@@ -1,0 +1,46 @@
+---
+- name: 部署protobuf
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除原来protobuf的sdk、数据目录
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/usr/local/protobuf"
+        - "/tmp/protoc-sdk.zip"
+
+    - name: 生成protobuf的SDK目录
+      file:
+        path: "/usr/local/protobuf"
+        state: directory
+        mode: '0755'
+
+    - name: 下载protobuf的sdk
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "{{ protoc_sdk_url }}"
+        wget_dir: "/tmp/protoc-sdk.zip"
+
+    - name: 解压protobuf的sdk
+      ansible.builtin.unarchive:
+        src: "/tmp/protoc-sdk.zip"
+        dest: "/usr/local/protobuf"
+        remote_src: yes
+
+    - name: 删除下载golang的压缩包
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/protoc-sdk.zip"
+
+    - name: 配置protobuf环境变量
+      blockinfile:
+        path: "/etc/profile"
+        block: |
+          export PATH=$PATH:/usr/local/protobuf/bin
+        marker: "# {mark} protobuf BLOCK"
+        create: yes

@@ -1,0 +1,8 @@
+---
+- name: 通知执行结束
+  hosts: localhost
+  any_errors_fatal: true
+  tasks:
+    - name: 发出完成声音
+      local_action: shell spd-say "completed"
+

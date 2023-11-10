@@ -1,0 +1,66 @@
+---
+- name: 部署vim
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:                    # add-apt-repository ppa:jonathonf/vim
+    - name: 卸载旧的vim
+      apt:
+        name:
+          - vim
+        state: absent
+
+    - name: 删除残留的vim配置
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_ssh_user_home }}/.vim"
+      when: false
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装vim
+      apt:
+        name:
+          - vim # 8.2
+          - ripgrep
+        state: present
+
+    - name: 下载vim配置
+      include_tasks: util_git_clone_root.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/vim.git"
+        git_repo_dir: "/usr/local/vim"
+
+    - name: 链接vim配置到vim
+      include_tasks: util_cat_append.yml
+      vars:
+        src_context: "/usr/local/vim/inject.txt"
+        dst_file: "/etc/vim/vimrc"
+        annotaion: '"'
+        context_sign: "vim"
+
+    - name: 测试结果
+      command:
+        cmd: "/usr/bin/vim --version"
+        chdir: "{{ ansible_ssh_user_home }}"
+      register: vim_version_result
+
+    - name: 输出测试结果
+      debug: 
+        msg: "{{ vim_version_result.stdout_lines }}"
+
+    - name: 输出需要做的后续操作
+      debug: 
+        msg: |
+          vim a.go
+              # :PlugUpgrade
+              :PlugInstall
+              :GoInstallBinaries
+          /usr/local/vim/myConfig.sh
+          vim /usr/local/vim/vimConfig.vim
+              let g:go_imports_autosave = 0

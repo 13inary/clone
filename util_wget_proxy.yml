@@ -1,0 +1,21 @@
+---
+- name: wget -Y on {{ wget_url }}
+  get_url:
+    url: "{{ wget_url }}"
+    dest: "{{ wget_dir }}"
+    mode: '0644'
+      #owner: "{{ ansible_ssh_user }}"
+      #group: "{{ ansible_ssh_user }}"
+  environment:
+    HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+  become_user: "{{ ansible_ssh_user }}"
+  register: command_result
+  until: command_result.failed == false
+  retries: 3
+  delay: 3
+
+    #- name: 输出go install结果
+    #  debug:
+    #    msg: "{{ command_result }}"

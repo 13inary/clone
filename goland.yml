@@ -1,0 +1,28 @@
+---
+- name: 部署goland
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的goland
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/goland.deb"
+
+    - name: 下载goland
+      get_url:
+        url: "{{ goland_deb_url }}"
+        dest: "/tmp/goland.deb"
+        mode: '0664'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+
+    - name: 安装goland
+      ansible.builtin.apt:
+        deb: "/tmp/goland.deb"
+
+

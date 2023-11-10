@@ -1,0 +1,40 @@
+---
+- name: 安装和配置wget
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 安装wget
+      apt:
+        name: wget
+        state: present
+        update_cache: yes
+        cache_valid_time: 3600 # 若1小时内更新过缓存，就不再更新
+
+    - name: 更新wget的配置文件
+      lineinfile:
+        path: "/etc/wgetrc"
+        line: "{{ item.line }}" # 确保文件中有该行
+        create: yes
+      loop: # 该方式会显示下面内容
+        - { line: "http_proxy = {{ clash_proxy_url }}:{{ clash_proxy_port }}" }
+        - { line: "https_proxy = {{ clash_proxy_url }}:{{ clash_proxy_port }}" }
+        - { line: "use_proxy = off" }
+
+    #- name: 更新wget的http_proxy
+    #  lineinfile:
+    #    path: "/etc/wgetrc"
+    #    line: "http_proxy = http://127.0.0.1:7890/" # 确保文件中有该行
+    #    create: yes
+
+    #- name: 更新wget的https_proxy
+    #  lineinfile:
+    #    path: "/etc/wgetrc"
+    #    line: "https_proxy = http://127.0.0.1:7890/"
+    #    create: yes
+
+    #- name: 更新wget的use_proxy
+    #  lineinfile:
+    #    path: "/etc/wgetrc"
+    #    line: "use_proxy = off"
+    #    create: yes

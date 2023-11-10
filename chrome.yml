@@ -1,0 +1,24 @@
+---
+- name: 部署chrome
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的chrome
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/chrome.deb"
+
+    - name: 下载chrome
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "{{ chrome_deb_url }}"
+        wget_dir: "/tmp/chrome.deb"
+
+    - name: 安装chrome
+      ansible.builtin.apt:
+        deb: "/tmp/chrome.deb"
+
+

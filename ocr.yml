@@ -1,0 +1,62 @@
+---
+- name: 部署ocr
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的ocr
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /usr/share/tesseract-ocr/4.00/tessdata/chi_sim.traineddata
+        - /usr/share/tesseract-ocr/4.00/tessdata/chi_tra.traineddata
+        - /usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装ocr
+      apt:
+        name:
+          - tesseract-ocr
+        state: present
+
+    - name: 下载中文简体
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/chi_sim.traineddata"
+        wget_dir: "/tmp/chi_sim.traineddata"
+
+    - name: 配置中文简体
+      ansible.builtin.copy:
+        src: /tmp/chi_sim.traineddata
+        dest: "/usr/share/tesseract-ocr/4.00/tessdata/chi_sim.traineddata"
+        remote_src: yes
+
+    - name: 下载中文繁体
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/chi_tra.traineddata"
+        wget_dir: "/tmp/chi_tra.traineddata"
+
+    - name: 配置中文繁体
+      ansible.builtin.copy:
+        src: /tmp/chi_tra.traineddata
+        dest: "/usr/share/tesseract-ocr/4.00/tessdata/chi_tra.traineddata"
+        remote_src: yes
+
+    - name: 下载英文
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "https://raw.githubusercontent.com/tesseract-ocr/tessdata/main/eng.traineddata"
+        wget_dir: "/tmp/eng.traineddata"
+
+    - name: 配置英文
+      ansible.builtin.copy:
+        src: /tmp/eng.traineddata
+        dest: "/usr/share/tesseract-ocr/4.00/tessdata/eng.traineddata"
+        remote_src: yes
+

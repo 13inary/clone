@@ -1,0 +1,15 @@
+---
+- name: 读取 {{ src_context }}
+  slurp:
+    src: "{{ src_context }}"
+  register: slurped_content
+
+- name: 解码内容
+  set_fact:
+    decoded_content: "{{ slurped_content['content'] | b64decode }}"
+
+- name: 追加内容到 {{ dst_file }}
+  blockinfile:
+    path: "{{ dst_file }}"
+    block: "{{ decoded_content }}"
+    marker: '{{ annotaion }} {mark} {{ context_sign }} BLOCK'

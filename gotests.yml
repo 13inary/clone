@@ -1,0 +1,20 @@
+---
+- name: 部署gotests
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 下载gotests
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/cweill/gotests.git"
+        git_repo_dir: "/opt/go/src/gotests"
+
+    - name: 编译gotests
+      include_tasks: util_go_build.yml
+      vars:
+        golang_dir: "/opt/go/src/gotests/gotests/"
+
+    - name: 安装gotests
+      command:
+        cmd: "mv /opt/go/src/gotests/gotests/gotests /opt/go/bin/gotests"

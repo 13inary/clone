@@ -1,0 +1,38 @@
+- name: 部署lazygit
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 安装lazygit
+      include_tasks: util_go_install.yml
+      loop:
+        - "github.com/jesseduffield/lazygit@v0.32.2"
+      loop_control:
+        loop_var: "go_project"
+
+    - name: 配置lazygit配置
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.config/lazygit/config.yml"
+        block: |
+          gui:
+            mainPanelSplitMode: 'horizontal' # one of 'horizontal' | 'flexible' | 'vertical'
+            language: 'auto' # one of 'auto' | 'en' | 'zh' | 'pl' | 'nl'
+            mouseEvents: false
+            showCommandLog: true
+            commandLogSize: 4
+        marker: "# {mark} lazygit BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置lazygit别名
+      blockinfile:
+        path: "{{ ansible_ssh_user_home }}/.bashrc"
+        block: |
+          alias lg='lazygit'
+        marker: "# {mark} lazygit BLOCK"
+        create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"

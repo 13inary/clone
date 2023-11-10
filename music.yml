@@ -1,0 +1,24 @@
+---
+- name: 部署music
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的music
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/music.deb"
+
+    - name: 下载music
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "{{ music_deb_url }}"
+        wget_dir: "/tmp/music.deb"
+
+    - name: 安装music
+      ansible.builtin.apt:
+        deb: "/tmp/music.deb"
+
+

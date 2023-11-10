@@ -1,0 +1,114 @@
+---
+- name: 安装clash服务
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 创建clash用户
+      user:
+        name: clash
+        system: yes
+        create_home: no
+        shell: /usr/sbin/nologin
+
+    - name: 拷贝clash工具
+      copy:
+        src: "{{ local_clash_bin }}"
+        dest: "/usr/local/bin/clash"
+        mode: '0700'
+        owner: clash
+        group: clash
+
+    - name: 生成clash配置文件目录
+      file:
+        path: "/etc/clash/"
+        state: directory
+        mode: '0700'
+        owner: clash
+        group: clash
+
+    - name: 拷贝clash的Country.mmdb
+      copy:
+        src: "{{ local_clash_country }}"
+        dest: "/etc/clash/Country.mmdb"
+        mode: '0600'
+        owner: clash
+        group: clash
+
+    - block: # 需要设置bind-address
+        - name: 下载clash的config.yml
+          get_url:
+            url: "{{ clash_config_url }}"
+            dest: "/etc/clash/config.yaml"
+            mode: '0600'
+            owner: clash
+            group: clash
+      rescue:
+        - name: 拷贝clash的config.yml
+          copy:
+            src: "{{ local_clash_config }}"
+            dest: "/etc/clash/config.yaml"
+            mode: '0600'
+            owner: clash
+            group: clash
+
+    - name: 设置clash访问控制
+      ansible.builtin.lineinfile:
+        path: "/etc/clash/config.yaml"
+        regexp: '^{{ item.key }}:'
+        line: "{{ item.key }}: {{ item.value }}" # 其他值：*
+        insertbefore: BOF
+      loop:
+        - { key: 'bind-address', value: '{{ (clash_global_access | bool) | ternary("*", "127.0.0.1") }}' }
+        - { key: 'mixed-port', value: '{{ clash_proxy_port }}' }
+
+    - name: 设置clash其他参数
+      ansible.builtin.lineinfile:
+        path: "/etc/clash/config.yaml"
+        regexp: "^{{ item }}:"
+        state: absent
+      loop:
+        - "external-controller"
+        #- port
+
+          #- name: 设置全局代理
+          #  blockinfile:
+          #    path: "/etc/profile"
+          #    block: |
+          #      export http_proxy="http://10.60.45.158:7890"
+          #      export https_proxy="http://10.60.45.158:7890"
+          #      export no_proxy="localhost;127.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;192.168.*"
+          #    marker: "# {mark} golang BLOCK"
+          #    create: yes
+
+    - name: 创建clash服务
+      copy:
+        content: |
+          [Unit]
+          Description=Clash proxy
+          After=network.target
+
+          [Service]
+          ExecStart=/usr/local/bin/clash -d /etc/clash/
+          Restart=on-failure
+          User=clash
+          Group=clash
+          RestartSec=3
+          LimitNOFILE=4096
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/clash.service
+
+    - name: 开启和启动clash服务
+      systemd:
+        name: clash
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: 重启clash服务
+      systemd:
+        name: clash
+        state: restarted
+

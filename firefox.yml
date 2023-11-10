@@ -1,0 +1,14 @@
+---
+- name: 部署firefox
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 写入需要手动操作的信息
+      template:
+        src: ./pkg/firefox.md
+        dest: "{{ ansible_ssh_user_home }}/TODO_firefox.md"
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"

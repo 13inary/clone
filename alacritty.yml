@@ -1,0 +1,37 @@
+---
+- name: 部署alacritty
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 卸载旧的alacritty
+      apt:
+        name:
+          - alacritty
+        state: absent
+
+    - name: 删除残留的alacritty
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ ansible_ssh_user_home }}/.config/alacritty"
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装alacritty
+      apt:
+        name:
+          - alacritty
+        state: present
+
+    - name: 下载alacritty的配置
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/alacritty.git"
+        git_repo_dir: "{{ ansible_ssh_user_home }}/.config/alacritty"
+
+

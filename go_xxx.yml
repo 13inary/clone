@@ -1,0 +1,21 @@
+---
+- name: 安装其他工具
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 安装其他工具
+      include_tasks: util_go_install.yml
+      loop:
+        - "github.com/cosmtrek/air" # run go project
+        - "github.com/tenfyzhong/gengotag"
+        - "github.com/gvls/randomString"
+        - "github.com/golangci/golangci-lint/cmd/golangci-lint@latest" # vim/golangci
+        - "github.com/nametake/golangci-lint-langserver@latest" # vim/golangci
+        - "google.golang.org/protobuf/cmd/protoc-gen-go@latest" # proto
+        - "google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest" # proto
+        - "github.com/favadi/protoc-go-inject-tag@latest" # proto/struct/tag
+          #- "github.com/Dreamacro/clash@v1.9.0"
+      loop_control:
+        loop_var: "go_project"
+

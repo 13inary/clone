@@ -1,0 +1,42 @@
+---
+- name: 部署slock
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 卸载残留的slock
+      command:
+        cmd: "/usr/bin/make uninstall"
+        chdir: "/tmp/slock"
+      ignore_errors: true
+
+    - name: 删除残留的slock源码
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/slock"
+        - "/usr/local/bin/slock"
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装slock的依赖
+      apt:
+        name:
+          - libxrandr-dev
+        state: present
+
+    - name: 下载slock
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/gvls/slock.git" # betterlockscreen xautolock
+        git_repo_dir: "/tmp/slock"
+
+    - name: 安装slock
+      command:
+        cmd: "/usr/bin/make clean install"
+        chdir: "/tmp/slock"
+          #become_user: "{{ ansible_ssh_user }}" # 不能使用这个
