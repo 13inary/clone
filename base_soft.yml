@@ -71,7 +71,9 @@
           - virt-manager
           - libvirt-daemon
           - libvirt-clients
+          # ssh
           - openssh-server
+          - sshpass
         state: present
       ignore_errors: true
 
