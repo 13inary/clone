@@ -20,6 +20,7 @@
       blockinfile:
         path: "{{ ansible_ssh_user_home }}/.bashrc"
         block: |
+            export FZF_DEFAULT_OPTS='--color=fg+:44,hl:124,hl+:196' # hl hl+ fg fg+ bg bg+
             #export FZF_DEFAULT_OPTS="--height 97% --border --preview 'batcat --color=always {}'"
             #export FZF_DEFAULT_OPTS='--bind ctrl-e:down,ctrl-u:up --preview \"[[ $(file --mime {}) =~ binary ]] && echo {} is a binary file || (ccat --color=always {} || highlight -O ansi -l {} || cat {}) 2> /dev/null | he  ad -500\"'
             # install the_silver_searcher
