@@ -16,6 +16,7 @@
           - wget
           - curl
           - p7zip-full
+          - unrar
           - figlet # 字符画图
           #- manpages-zh # 中文man手册
           #- redis-server
