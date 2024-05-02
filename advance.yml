@@ -6,7 +6,7 @@
 - import_playbook: protobuf.yml
 
 - import_playbook: shell.yml
-- import_playbook: firefox.yml
+  #- import_playbook: firefox.yml
 - import_playbook: fzf.yml
 - import_playbook: nodejs.yml
 - import_playbook: vim.yml
