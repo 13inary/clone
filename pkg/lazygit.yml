@@ -1,0 +1,49 @@
+refresher:
+  fetchInterval: 1 # Re-fetch interval in seconds. Auto-fetch can be disabled via option 'git.autoFetch'.
+promptToReturnFromSubprocess: false # display confirmation when subprocess terminates
+gui:
+  mainPanelSplitMode: 'horizontal' # one of 'horizontal' | 'flexible' | 'vertical'
+  language: 'auto' # one of 'auto' | 'en' | 'zh' | 'pl' | 'nl'
+  mouseEvents: false
+  showCommandLog: true
+  commandLogSize: 4
+  theme:
+    selectedLineBgColor:
+      - default # set to `default` to have no background colour
+    selectedRangeBgColor:
+      - default
+
+customCommands:
+  - key: "s"
+    command: git stash push -u -m "`date '+%F_%T'`"" ""{{index .PromptResponses 0}}" # -u:包括新文件 -a:包括新文件和.gitignore中的文件
+    context: "files"
+    description: "Stash all changes. include new file"
+    loadingText: 'Stashing ...'
+    prompts:
+      - type: 'input'
+        title: 'Stash changes'
+  - key: "M"
+    command: project=`git rev-parse --show-toplevel | xargs basename` && upBranch=`awk -v project="${project}" -v branchName="{{.CheckedOutBranch.Name}}" '$1 == project && $3 == branchName {print $2}' ~/.config/glab-cli/branch.txt | tail -1 | awk '{print $NF}' | uniq` && \[ -n "${upBranch}" \] && git push --set-upstream origin {{.CheckedOutBranch.Name}} && glab mr create --remove-source-branch --squash-before-merge -y --target-branch "${upBranch}" --title "{{index .PromptResponses 0}}" --description "" && glab ci status --live
+    context: "files"
+    description: "create merge in gitlab"
+    subprocess: true
+    prompts:
+      - type: 'input'
+        title: 'title'
+        initialValue: '{{.CheckedOutBranch.Name}} '
+
+  - key: "n"
+    command: \[ -n "{{index .PromptResponses 0}}" \] && git checkout -b {{index .PromptResponses 0}} refs/heads/{{.SelectedLocalBranch.Name}} && echo "`git rev-parse --show-toplevel | xargs basename` {{.SelectedLocalBranch.Name}} {{index .PromptResponses 0}}" >> ~/.config/glab-cli/branch.txt
+    context: "localBranches"
+    description: "new branch. record: project_name up_branch new_branch"
+    prompts:
+      - type: "input"
+        title: "New Branch Name (Branch is off of '{{.SelectedLocalBranch.Name}}')"
+  - key: "d"
+    command: git branch -d "{{.SelectedLocalBranch.Name}}" || sed -i "\#^`git rev-parse --show-toplevel | xargs basename` .* {{.SelectedLocalBranch.Name}}$#d" ~/.config/glab-cli/branch.txt
+    context: "localBranches"
+    description: "delete branch. info: project_name .* select_branch"
+    prompts:
+      - type: "confirm"
+        title: "Delete Branch"
+        body: "Are you sure you want to delete the branch '{{.SelectedLocalBranch.Name}}'?"

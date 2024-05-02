@@ -6,24 +6,18 @@
     - name: 安装lazygit
       include_tasks: util_go_install.yml
       loop:
-        - "github.com/jesseduffield/lazygit@v0.32.2"
+        - "github.com/jesseduffield/lazygit@v0.40.2"
       loop_control:
         loop_var: "go_project"
 
     - name: 配置lazygit配置
-      blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.config/lazygit/config.yml"
-        block: |
-          gui:
-            mainPanelSplitMode: 'horizontal' # one of 'horizontal' | 'flexible' | 'vertical'
-            language: 'auto' # one of 'auto' | 'en' | 'zh' | 'pl' | 'nl'
-            mouseEvents: false
-            showCommandLog: true
-            commandLogSize: 4
-        marker: "# {mark} lazygit BLOCK"
-        create: yes
+      copy:
+        src: ./pkg/lazygit.yml
+        dest: "{{ ansible_ssh_user_home }}/.config/lazygit/config.yml"
+        force: yes
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
+        mode: "664"
       become_user: "{{ ansible_ssh_user }}"
 
     - name: 配置lazygit别名
@@ -33,6 +27,45 @@
           alias lg='lazygit'
         marker: "# {mark} lazygit BLOCK"
         create: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 下载glab
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/profclems/glab.git"
+        git_repo_dir: "/tmp/glab"
+
+    - name: 编译glab
+      command:
+        cmd: "/usr/bin/make"
+        chdir: "/tmp/glab"
+        #become_user: "{{ ansible_ssh_user }}" # 不能使用这个
+      environment:
+        PATH: "{{ ansible_env.PATH }}:/usr/local/go/bin"
+        GOPATH: "/opt/go"
+        GOPROXY: "https://goproxy.cn,direct"
+        HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+
+    - name: 安装glab运行工具
+      command:
+        cmd: "cp -f /tmp/glab/bin/glab /opt/go/bin"
+
+    - name: 创建glab-cli配置目录
+      ansible.builtin.file:
+        path: "{{ ansible_ssh_user_home }}/.config/glab-cli"
+        state: directory
+        mode: '0755'  # 设置目录权限，根据需要调整
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 创建glab-cli数据文件
+      ansible.builtin.file:
+        path: "{{ ansible_ssh_user_home }}/.config/glab-cli/branch.txt"
+        state: touch
+        mode: '0644'  # 设置文件权限，根据需要调整
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
       become_user: "{{ ansible_ssh_user }}"
