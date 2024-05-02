@@ -160,31 +160,13 @@
         group: "{{ ansible_ssh_user }}"
       become_user: "{{ ansible_ssh_user }}"
 
-    - name: 配置开机终端的样式（TODO 还存在重复写）
-      blockinfile:
-        path: "/etc/default/console-setup"
-        block: |
-          [General]
-          # CONFIGURATION FILE FOR SETUPCON
-
-          # Consult the console-setup(5) manual page.
-
-          ACTIVE_CONSOLES="/dev/tty[1-6]"
-
-          CHARMAP="UTF-8"
-
-          CODESET="guess"
-          FONTFACE="Fixed"
-          #FONTSIZE="8x16"
-          FONTSIZE="16x32"
-
-          VIDEOMODE=
-
-          # The following is an example how to use a braille font
-          # FONT='lat9w-08.psf.gz brl-8x8.psf'
-        marker: "# {mark} custom BLOCK"
-        create: yes
-        mode: "644"
+    - name: 配置开机终端的样式
+      lineinfile:
+        path: /etc/default/console-setup
+        regexp: '^FONTSIZE='
+        line: 'FONTSIZE="16x32" # FONTSIZE="8x16"'
+        backrefs: yes
+        state: present
 
     - name: 配置输入法
       blockinfile:
