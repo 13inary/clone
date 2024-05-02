@@ -28,6 +28,7 @@
         name:
           - vim # 8.2
           - ripgrep
+          - shfmt
         state: present
 
     - name: 下载vim配置
