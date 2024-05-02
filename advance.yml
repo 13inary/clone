@@ -23,6 +23,7 @@
 - import_playbook: ocr.yml
 - import_playbook: input_method.yml
 - import_playbook: transmit.yml
+- import_playbook: cloud_storage.yml
 - import_playbook: chrome.yml
 - import_playbook: music.yml
 - import_playbook: office.yml

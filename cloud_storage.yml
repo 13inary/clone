@@ -1,0 +1,87 @@
+---
+- name: 部署cloud storage
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 安装aliyundrive-webdev
+      ansible.builtin.snap:
+        name: aliyundrive-webdav
+        #classic: yes
+
+    - name: 创建ali用户
+      user:
+        name: ali
+        system: yes
+        create_home: yes
+        shell: /usr/sbin/nologin
+
+    - name: 创建ali-webdev服务
+      copy:
+        content: |
+          [Unit]
+          Description=ali-webdev
+          After=network.target
+
+          [Service]
+          ExecStart=/snap/bin/aliyundrive-webdav --host 127.0.0.1 -p 8697
+          Restart=on-failure
+          User=ali
+          Group=ali
+          RestartSec=3
+          LimitNOFILE=4096
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/ali-webdev.service
+
+    - name: 开启和启动ali-webdev服务
+      systemd:
+        name: ali-webdev
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: 重启ali-webdev服务
+      systemd:
+        name: ali-webdev
+        state: restarted
+
+    - name: 删除残留的rclone
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/rclone.deb"
+
+    - name: 下载rclone
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "{{ rclone_deb_url }}"
+        wget_dir: "/tmp/rclone.deb"
+
+    - name: 安装rclone
+      ansible.builtin.apt:
+        deb: "/tmp/rclone.deb"
+
+    - name: 创建rclone配置目录
+      file:
+        path: "{{ ansible_ssh_user_home }}/.config/rclone"
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: '0775'
+      become: yes
+      become_user: "{{ ansible_ssh_user }}"
+      #become_user: "root"
+
+    - name: 配置rclone配置
+      template:
+        src: ./pkg/rclone.conf
+        dest: "{{ ansible_ssh_user_home }}/.config/rclone/rclone.conf"
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"
+
+# rclone mount aliyun:/ /opt/go/src/aliyun --config /opt/rcconfig/rclone.conf  --daemon
