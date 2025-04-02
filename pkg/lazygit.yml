@@ -23,22 +23,73 @@ customCommands:
       - type: 'input'
         title: 'Stash changes'
   - key: "M"
-    command: project=`git rev-parse --show-toplevel | xargs basename` && upBranch=`awk -v project="${project}" -v branchName="{{.CheckedOutBranch.Name}}" '$1 == project && $3 == branchName {print $2}' ~/.config/glab-cli/branch.txt | tail -1 | awk '{print $NF}' | uniq` && \[ -n "${upBranch}" \] && git push --set-upstream origin {{.CheckedOutBranch.Name}} && glab mr create --remove-source-branch --squash-before-merge -y --target-branch "${upBranch}" --title "{{index .PromptResponses 0}}" --description "" && glab ci status --live
+    command: |
+      #!/bin/bash
+      project=`git rev-parse --show-toplevel | xargs basename`
+      upBranch=`awk -v project="${project}" -v branchName="{{.CheckedOutBranch.Name}}" '$1 == project && $3 == branchName {print $2}' ~/.config/glab-cli/branch.txt`
+      upBranch=`echo "$upBranch" | tail -1 | awk '{print $NF}' | uniq`
+      if \[ -z "${upBranch}" \]; then
+        exit 1
+      fi
+      # get version
+      old_version=""
+      new_version=""
+      file1="./install/version"
+      case 1 in
+        $(test -f "$file1" && echo 1))
+          old_version=$(cat "$file1")
+          IFS='.' read -r -a version_parts <<< "$old_version" # 使用 '.' 作为分隔符，将版本号分成多个部分
+          last_index=$(( ${#version_parts[@]} - 1 ))
+          last_part="${version_parts[$last_index]}"
+          last_part_length=${#last_part}
+          new_last_part=$(printf "%0${last_part_length}d" $((10#$last_part + 1))) # 将最后一个部分转换为数字，加1，并格式化为与原来一样的长度
+          version_parts[$last_index]="$new_last_part" # 替换掉最后一个部分
+          new_version=$(IFS='.'; echo "${version_parts[*]}")
+          echo "$new_version" > "$file1" # 将新版本号写入原文件
+          git add $file1
+          git commit -m "version [v${old_version}] => [v${new_version}]"
+          ;;
+      esac
+      version_str="[v${new_version}]"
+      if [ -z "${new_version}" ]; then
+        version_str=""
+      fi
+      # copy commit message
+      echo -n "{{index .PromptResponses 0}}" | xsel -b || true
+      # save change
+      echo "$(date '+%F_%T') ${upBranch} | ${version_str} $(date '+%F_%T')/name: {{index .PromptResponses 0}}" >> ~/bcs.log
+      echo "" >> ~/bcs.log
+      # push merge request
+      git push --set-upstream origin {{.CheckedOutBranch.Name}}
+      glab mr create --remove-source-branch --squash-before-merge -y --target-branch "${upBranch}" --title "${version_str} $(date '+%F_%T')/name: {{index .PromptResponses 0}}" --description ""
+      glab ci status --live
     context: "files"
     description: "create merge in gitlab"
     subprocess: true
     prompts:
       - type: 'input'
-        title: 'title'
-        initialValue: '{{.CheckedOutBranch.Name}} '
+        title: '分支名: {{.CheckedOutBranch.Name}}'
+        initialValue: ''
 
   - key: "n"
-    command: \[ -n "{{index .PromptResponses 0}}" \] && git checkout -b {{index .PromptResponses 0}} refs/heads/{{.SelectedLocalBranch.Name}} && echo "`git rev-parse --show-toplevel | xargs basename` {{.SelectedLocalBranch.Name}} {{index .PromptResponses 0}}" >> ~/.config/glab-cli/branch.txt
+    command: |
+      new_branch_name="{{index .PromptResponses 0}}"
+      if \[ -z "${new_branch_name}" \]; then
+        new_branch_name="bugfix/name/20250212_"
+        # update date
+        new_branch_name=$(echo "${new_branch_name}" | sed -E "s/[0-9]{8}/$(date '+%Y%m%d')/")
+        # add random string
+        new_branch_name="${new_branch_name}$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)"
+      fi
+      git checkout -b "${new_branch_name}" refs/heads/{{.SelectedLocalBranch.Name}}
+      echo "`git rev-parse --show-toplevel | xargs basename` {{.SelectedLocalBranch.Name}} ${new_branch_name}" >> ~/.config/glab-cli/branch.txt
     context: "localBranches"
     description: "new branch. record: project_name up_branch new_branch"
     prompts:
       - type: "input"
         title: "New Branch Name (Branch is off of '{{.SelectedLocalBranch.Name}}')"
+        initialValue: ''
+        labelFormat: '{{"#" | black | bold}}{{.number | white | bold}} {{.title | yellow | bold}}{{" [" | black | bold}}{{.ref_name | green}}{{"]" | black | bold}}'
   - key: "d"
     command: git branch -d "{{.SelectedLocalBranch.Name}}" || sed -i "\#^`git rev-parse --show-toplevel | xargs basename` .* {{.SelectedLocalBranch.Name}}$#d" ~/.config/glab-cli/branch.txt
     context: "localBranches"
