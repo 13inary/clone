@@ -12,6 +12,7 @@
     - name: 安装基础软件
       apt:
         name:
+          - make
           - git
           - wget
           - curl
