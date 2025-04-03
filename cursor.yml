@@ -1,0 +1,21 @@
+---
+- name: 部署cursor
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的cursor
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/opt/script/bin/cursor.AppImage"
+
+    - name: 下载cursor
+      get_url:
+        url: "{{ cursor_bin_url }}"
+        dest: "/opt/script/bin/cursor.AppImage"
+        mode: '0775'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      # become_user: "{{ ansible_ssh_user }}"
