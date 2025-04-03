@@ -20,6 +20,8 @@
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
       become_user: "{{ ansible_ssh_user }}"
+      retries: 3
+      delay: 3
 
     - name: 安装office
       ansible.builtin.apt:
