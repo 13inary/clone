@@ -1,3 +1,0 @@
-mkdir /home/v/.config/lazygit
-chown -R v:v /usr/local/vim/plugged
-sudo apt-get install -y libpcap-dev
