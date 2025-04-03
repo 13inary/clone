@@ -25,6 +25,11 @@
         mode: '0644'
           #owner: "{{ ansible_ssh_user }}"
           #group: "{{ ansible_ssh_user }}"
+      # environment:
+      #   https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      #   http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      retries: 3
+      delay: 3
 
     - name: 解压golang的sdk
       ansible.builtin.unarchive:
