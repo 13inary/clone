@@ -61,3 +61,12 @@
         #- dconf write /desktop/ibus/engine/sunpinyin/quanpin/fuzzysegs/enabled true
         #- dconf write /desktop/ibus/engine/sunpinyin/quanpin/innerfuzzy/enabled true
 
+    - name: 配置ibus配置
+      copy:
+        src: ./pkg/ibus.dict
+        dest: "{{ ansible_ssh_user_home }}/Downloads/ibus.dict"
+        force: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"
