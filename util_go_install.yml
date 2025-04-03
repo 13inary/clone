@@ -1,4 +1,12 @@
 ---
+- name: 修改/opt/go/pkg目录权限
+  ansible.builtin.file:
+    path: /opt/go/pkg
+    state: directory
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+    recurse: yes
+
 - name: go get {{ go_project }}
   command:
     cmd: "/usr/local/go/bin/go get {{ go_project }}"
