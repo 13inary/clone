@@ -29,7 +29,6 @@
 - import_playbook: dmenu.yml
 - import_playbook: dwm.yml
 - import_playbook: theme.yml
-- import_playbook: ocr.yml
 - import_playbook: input_method.yml
 
 # software 1
@@ -40,6 +39,7 @@
 - import_playbook: office.yml
 
 # software 2
+# - import_playbook: ocr.yml
 # - import_playbook: music.yml
 # - import_playbook: cloud_storage.yml
 # - import_playbook: etcd.yml
