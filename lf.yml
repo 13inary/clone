@@ -46,6 +46,7 @@
       loop:
         - "{{ ansible_ssh_user_home }}/.config/lf"
         - /tmp/ctpv
+        - /opt/go/pkg/mod/cache/download/github.com/gdamore
 
     - name: 更新软件源包列表
       apt:
@@ -132,34 +133,41 @@
           export PATH="$HOME/.local/bin:$PATH"
         marker: "# {mark} ueberzug BLOCK"
         create: yes
-      
-    - name: 下载lf
-      command:
-        cmd: "/usr/local/go/bin/go get github.com/gokcehan/lf@latest"
-        chdir: "/opt/go/src/example/"
-      environment:
-        GOPATH: "/opt/go"
-        GOPROXY: "https://goproxy.cn,direct"
-        HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-      become_user: "{{ ansible_ssh_user }}"
-      register: command_result
-      until: command_result.failed == false
-      retries: 3
-      delay: 3
 
     - name: 安装lf
-      command:
-        cmd: '/usr/bin/env CGO_ENABLED=0 /usr/local/go/bin/go install -ldflags="-s -w" github.com/gokcehan/lf@latest'
-        chdir: "/opt/go/src/example/"
-      environment:
-        GOPATH: "/opt/go"
-        GOPROXY: "https://goproxy.cn,direct"
-        HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-      become_user: "{{ ansible_ssh_user }}"
-      register: command_result
-      until: command_result.failed == false
-      retries: 3
-      delay: 3
+      include_tasks: util_go_install.yml
+      loop:
+        - "github.com/gokcehan/lf@latest"
+      loop_control:
+        loop_var: "go_project"
+      
+    # - name: 下载lf
+    #   command:
+    #     cmd: "/usr/local/go/bin/go get github.com/gokcehan/lf@latest"
+    #     chdir: "/opt/go/src/example/"
+    #   environment:
+    #     GOPATH: "/opt/go"
+    #     GOPROXY: "https://goproxy.cn,direct"
+    #     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    #   become_user: "{{ ansible_ssh_user }}"
+    #   register: command_result
+    #   until: command_result.failed == false
+    #   retries: 3
+    #   delay: 3
+
+    # - name: 安装lf
+    #   command:
+    #     cmd: '/usr/bin/env CGO_ENABLED=0 /usr/local/go/bin/go install -ldflags="-s -w" github.com/gokcehan/lf@latest'
+    #     chdir: "/opt/go/src/example/"
+    #   environment:
+    #     GOPATH: "/opt/go"
+    #     GOPROXY: "https://goproxy.cn,direct"
+    #     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    #   become_user: "{{ ansible_ssh_user }}"
+    #   register: command_result
+    #   until: command_result.failed == false
+    #   retries: 3
+    #   delay: 3
 
     - name: 下载lf的配置
       include_tasks: util_git_clone.yml
