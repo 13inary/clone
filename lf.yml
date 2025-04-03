@@ -25,6 +25,20 @@
         chdir: "/tmp/ctpv"
       ignore_errors: true
 
+    - name: 删除残留的 ueberzug
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/ueberzug"
+      when: true
+      # 下面这些需要手动操作，因为过于复杂
+      #find ~/.local/ -name '*ueberzug*'
+      #rm -rf
+      #vim ~/.local/lib/python3.x/site-packages/easy-install.pth
+      #find ~/.local/lib/python3.x/ -name '*.pyc' -delete
+      #find ~/.local/lib/python3.x/ -name '__pycache__' -exec rm -rf {} +
+
     - name: 删除残留的lf配置
       ansible.builtin.file:
         path: "{{ item }}"
@@ -67,17 +81,20 @@
         chdir: "/tmp/ctpv"
           #become_user: "{{ ansible_ssh_user }}" # 不能使用这个
 
-    - name: 安装ueberzug
-      ansible.builtin.pip:
-        name: ueberzug
-          #extra_args: '-i https://pypi.tuna.tsinghua.edu.cn/simple/ --trusted-host pypi.tuna.tsinghua.edu.cn'
-        extra_args: '-i http://pypi.doubanio.com/simple/ --trusted-host pypi.doubanio.com '
-          #extra_args: '-i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com'
-          #extra_args: '-i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com'
-          #extra_args: '-i https://pypi.mirrors.ustc.edu.cn/simple/ --trusted-host pypi.mirrors.ustc.edu.cn'
-          #extra_args: '-i http://pypi.mirrors.ustc.edu.cn/simple/ --trusted-host pypi.mirrors.ustc.edu.cn'
-      environment:
-        HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    # - name: 安装ueberzug
+    #   ansible.builtin.pip:
+    #     name: ueberzug
+    #     # extra_args: '-i https://pypi.tuna.tsinghua.edu.cn/simple/ --trusted-host pypi.tuna.tsinghua.edu.cn'
+    #     extra_args: '-i http://pypi.doubanio.com/simple/ --trusted-host pypi.doubanio.com '
+    #     # extra_args: '-i http://pypi.douban.com/simple/ --trusted-host pypi.douban.com'
+    #     # extra_args: '-i http://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com'
+    #     # extra_args: '-i https://pypi.mirrors.ustc.edu.cn/simple/ --trusted-host pypi.mirrors.ustc.edu.cn'
+    #     # extra_args: '-i http://pypi.mirrors.ustc.edu.cn/simple/ --trusted-host pypi.mirrors.ustc.edu.cn'
+    #   environment:
+    #     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    #     https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    #     http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+
 
       #git clone https://github.com/seebye/ueberzug
       #cd ueberzug
@@ -85,12 +102,36 @@
       #python3 setup.py install --user
       #python3 -m site --user-base
       #export PATH="$HOME/.local/bin:$PATH"
-      #
-      #find ~/.local/ -name '*ueberzug*'
-      #rm -rf
-      #vim ~/.local/lib/python3.x/site-packages/easy-install.pth
-      #find ~/.local/lib/python3.x/ -name '*.pyc' -delete
-      #find ~/.local/lib/python3.x/ -name '__pycache__' -exec rm -rf {} +
+    - name: 下载ueberzug
+      include_tasks: util_git_clone.yml
+      vars:
+        git_repo_url: "https://github.com/seebye/ueberzug"
+        git_repo_dir: "/tmp/ueberzug"
+
+    - name: 安装 ueberzug step1
+      command:
+        cmd: "/usr/bin/git checkout tags/18.1.9"
+        chdir: "/tmp/ueberzug"
+
+    - name: 安装 ueberzug step2
+      command:
+        cmd: "/usr/bin/python3 setup.py install --user"
+        chdir: "/tmp/ueberzug"
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 安装 ueberzug step3
+      command:
+        cmd: "/usr/bin/python3 -m site --user-base"
+        chdir: "/tmp/ueberzug"
+      become_user: "{{ ansible_ssh_user }}"
+    
+    - name: 配置 ueberzug 环境变量
+      blockinfile:
+        path: "/etc/profile"
+        block: |
+          export PATH="$HOME/.local/bin:$PATH"
+        marker: "# {mark} ueberzug BLOCK"
+        create: yes
       
     - name: 下载lf
       command:
