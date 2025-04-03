@@ -4,11 +4,45 @@
   become: yes
   any_errors_fatal: true
   tasks:
-    - name: 写入需要手动操作的信息
-      template:
-        src: ./pkg/firefox.md
-        dest: "{{ ansible_ssh_user_home }}/TODO_firefox.md"
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
-        mode: "664"
-      become_user: "{{ ansible_ssh_user }}"
+    # - name: 写入需要手动操作的信息
+    #   template:
+    #     src: ./pkg/firefox.md
+    #     dest: "{{ ansible_ssh_user_home }}/TODO_firefox.md"
+    #     owner: "{{ ansible_ssh_user }}"
+    #     group: "{{ ansible_ssh_user }}"
+    #     mode: "664"
+    #   become_user: "{{ ansible_ssh_user }}"
+
+    - name: 设置snap代理
+      command:
+        cmd: "/usr/bin/snap set system proxy.http='http://127.0.0.1:7890'"
+
+    - name: 设置snap https代理
+      command:
+        cmd: "/usr/bin/snap set system proxy.https='http://127.0.0.1:7890'"
+
+    - name: 查看snap代理配置
+      command:
+        cmd: "/usr/bin/snap get system proxy"
+
+    - name: 更新firefox
+      command:
+        cmd: "/usr/bin/snap refresh firefox"
+      register: command_result
+      until: command_result.failed == false
+      retries: 3
+      delay: 3
+
+    # sudo snap unset system proxy
+
+    - name: 清除snap代理
+      command:
+        cmd: "/usr/bin/snap set system proxy.http=''"
+
+    - name: 清除snap https代理
+      command:
+        cmd: "/usr/bin/snap set system proxy.https=''"
+
+    - name: 查看snap代理配置
+      command:
+        cmd: "/usr/bin/snap get system proxy"
