@@ -7,7 +7,7 @@
     - name: 安装其他工具
       include_tasks: util_go_install.yml
       loop:
-        - "github.com/cosmtrek/air" # run go project
+        - "github.com/air-verse/air" # run go project, old author is cosmtrek
         - "github.com/tenfyzhong/gengotag"
         - "github.com/gvls/randomString"
         - "github.com/golangci/golangci-lint/cmd/golangci-lint@latest" # vim/golangci
