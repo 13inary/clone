@@ -1,12 +1,21 @@
 ---
-# advance
+# prefix
+- import_playbook: souce_ubuntu_22.yml
+- import_playbook: base_soft.yml
+- import_playbook: wget.yml
+- import_playbook: git.yml
+- import_playbook: clash.yml
+- import_playbook: golang.yml
+
+# go lib
 - import_playbook: go_xxx.yml
 - import_playbook: lazygit.yml
 - import_playbook: gotests.yml
 - import_playbook: protobuf.yml
 
+# system
 - import_playbook: shell.yml
-  #- import_playbook: firefox.yml
+- import_playbook: firefox.yml
 - import_playbook: fzf.yml
 - import_playbook: nodejs.yml
 - import_playbook: vim.yml
@@ -22,18 +31,24 @@
 - import_playbook: theme.yml
 - import_playbook: ocr.yml
 - import_playbook: input_method.yml
+
+# software 1
+- import_playbook: chatbox.yml
+- import_playbook: cursor.yml
 - import_playbook: transmit.yml
-- import_playbook: cloud_storage.yml
 - import_playbook: chrome.yml
-- import_playbook: music.yml
 - import_playbook: office.yml
-- import_playbook: etcd.yml
-  #- import_playbook: wemeet.yml
-  #- import_playbook: goland.yml
-  #- import_playbook: webstorm.yml
-  #- import_playbook: vscode.yml
-  #- import_playbook: charles.yml
-  #- import_playbook: drawio.yml
+
+# software 2
+# - import_playbook: music.yml
+# - import_playbook: cloud_storage.yml
+# - import_playbook: etcd.yml
+# - import_playbook: wemeet.yml
+# - import_playbook: goland.yml
+# - import_playbook: webstorm.yml
+# - import_playbook: vscode.yml
+# - import_playbook: charles.yml
+# - import_playbook: drawio.yml
 
 - import_playbook: finish.yml
 
