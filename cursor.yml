@@ -19,3 +19,13 @@
         owner: "{{ ansible_ssh_user }}"
         group: "{{ ansible_ssh_user }}"
       # become_user: "{{ ansible_ssh_user }}"
+
+    - name: 配置cursor配置
+      copy:
+        src: ./pkg/cursor.code-profile
+        dest: "{{ ansible_ssh_user_home }}/Downloads/cursor.code-profile"
+        force: yes
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        mode: "664"
+      become_user: "{{ ansible_ssh_user }}"
