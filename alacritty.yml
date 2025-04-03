@@ -4,6 +4,19 @@
   become: yes
   any_errors_fatal: true
   tasks:
+    - name: 添加仓库
+      ansible.builtin.command:
+        cmd: add-apt-repository ppa:aslatter/ppa -y # sudo add-apt-repository ppa:mmstick76/alacritty
+      environment:
+        https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+        http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      when: true
+
+    - name: 删除仓库
+      ansible.builtin.command:
+        cmd: add-apt-repository –remove ppa:aslatter/ppa
+      when: false
+
     - name: 卸载旧的alacritty
       apt:
         name:
@@ -27,6 +40,9 @@
         name:
           - alacritty
         state: present
+      environment: # 处理连接不上仓库的问题
+        https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+        http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
 
     - name: 下载alacritty的配置
       include_tasks: util_git_clone.yml
