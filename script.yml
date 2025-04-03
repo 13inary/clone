@@ -25,12 +25,12 @@
         marker: "# {mark} script BLOCK"
         create: yes
 
-    - name: 安装SCVPN
-      ansible.builtin.copy:
-        src: ./pkg/SCVPN
-        dest: /opt/script/bin/SCVPN
-        #owner: "{{ ansible_ssh_user }}"
-        #group: "{{ ansible_ssh_user }}"
-        mode: '0755'
-      #become_user: "{{ ansible_ssh_user }}"
+    # - name: 安装SCVPN
+    #   ansible.builtin.copy:
+    #     src: ./pkg/SCVPN
+    #     dest: /opt/script/bin/SCVPN
+    #     #owner: "{{ ansible_ssh_user }}"
+    #     #group: "{{ ansible_ssh_user }}"
+    #     mode: '0755'
+    #   #become_user: "{{ ansible_ssh_user }}"
 
