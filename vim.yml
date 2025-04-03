@@ -3,7 +3,15 @@
   hosts: ubuntu_22
   become: yes
   any_errors_fatal: true
-  tasks:                    # add-apt-repository ppa:jonathonf/vim
+  tasks:
+    - name: 添加9.0版本的vim仓库
+      ansible.builtin.command:
+        cmd: add-apt-repository ppa:jonathonf/vim -y
+      environment:
+        https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+        http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      when: true
+
     - name: 卸载旧的vim
       apt:
         name:
@@ -15,8 +23,9 @@
         path: "{{ item }}"
         state: absent
       loop:
-        - "{{ ansible_ssh_user_home }}/.vim"
-      when: false
+        # - "{{ ansible_ssh_user_home }}/.vim"
+        - "/usr/local/vim"
+      when: true
 
     - name: 更新软件源包列表
       apt:
@@ -30,12 +39,23 @@
           - ripgrep
           - shfmt
         state: present
+      environment: # 9.0版本需要设置代理
+        https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+        http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
 
     - name: 下载vim配置
       include_tasks: util_git_clone_root.yml
       vars:
         git_repo_url: "https://github.com/gvls/vim.git"
         git_repo_dir: "/usr/local/vim"
+
+    - name: 修改vim目录权限
+      ansible.builtin.file:
+        path: /usr/local/vim
+        state: directory
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+        recurse: yes
 
     - name: 链接vim配置到vim
       include_tasks: util_cat_append.yml
@@ -44,6 +64,20 @@
         dst_file: "/etc/vim/vimrc"
         annotaion: '"'
         context_sign: "vim"
+
+    # - name: 创建vim插件目录
+    #   ansible.builtin.file:
+    #     path: /usr/local/vim/plugged
+    #     state: directory
+    #     owner: "{{ ansible_ssh_user }}"
+    #     group: "{{ ansible_ssh_user }}"
+
+    # - name: 创建vim的coc数据目录
+    #   ansible.builtin.file:
+    #     path: /usr/local/vim/cocData
+    #     state: directory
+    #     owner: "{{ ansible_ssh_user }}"
+    #     group: "{{ ansible_ssh_user }}"
 
     - name: 测试结果
       command:
