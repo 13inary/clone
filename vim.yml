@@ -43,6 +43,14 @@
         https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
         http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
 
+    - name: 删除仓库 # 避免 apt update 失败
+      ansible.builtin.command:
+        cmd: add-apt-repository --remove ppa:jonathonf/vim -y
+      environment:
+        https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+        http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      when: true
+
     - name: 下载vim配置
       include_tasks: util_git_clone_root.yml
       vars:

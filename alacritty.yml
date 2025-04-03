@@ -12,11 +12,6 @@
         http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
       when: true
 
-    - name: 删除仓库
-      ansible.builtin.command:
-        cmd: add-apt-repository –remove ppa:aslatter/ppa
-      when: false
-
     - name: 卸载旧的alacritty
       apt:
         name:
@@ -43,6 +38,14 @@
       environment: # 处理连接不上仓库的问题
         https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
         http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+
+    - name: 删除仓库 # 避免 apt update 失败
+      ansible.builtin.command:
+        cmd: add-apt-repository --remove ppa:aslatter/ppa -y
+      environment:
+        https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+        http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      when: true
 
     - name: 下载alacritty的配置
       include_tasks: util_git_clone.yml
