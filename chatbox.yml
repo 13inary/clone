@@ -1,0 +1,27 @@
+---
+- name: 部署chatbox
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 删除残留的chatbox
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/opt/script/bin/chatbox.AppImage"
+
+    - name: 安装依赖
+      apt:
+        name:
+          - libfuse-dev
+        state: present
+
+    - name: 下载chatbox
+      get_url:
+        url: "{{ chatbox_bin_url }}"
+        dest: "/opt/script/bin/chatbox.AppImage"
+        mode: '0775'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      # become_user: "{{ ansible_ssh_user }}"
