@@ -10,6 +10,15 @@
       loop_control:
         loop_var: "go_project"
 
+    - name: 创建lazygit配置目录
+      ansible.builtin.file:
+        path: "{{ ansible_ssh_user_home }}/.config/lazygit"
+        state: directory
+        mode: '0755'
+        owner: "{{ ansible_ssh_user }}"
+        group: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
+
     - name: 配置lazygit配置
       copy:
         src: ./pkg/lazygit.yml
