@@ -3,6 +3,9 @@
   hosts: ubuntu_22
   become: yes
   any_errors_fatal: true
+  vars:
+    nodejs_version: "v20.19.0"
+    nvm_version: "v0.40.2"
   tasks:
     - name: 卸载旧的nodejs、npm
       apt:
@@ -11,40 +14,75 @@
           - npm
         state: absent
 
+    - name: 卸载nvm的nodejs、npm
+      shell: |
+        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        nvm uninstall {{ nodejs_version }}
+      become_user: "{{ ansible_ssh_user }}"
+      ignore_errors: true
+
     - name: 删除残留的nodejs和npm
       ansible.builtin.file:
         path: "{{ item }}"
         state: absent
       loop:
-        - "/usr/bin/npm"
-        - "/usr/local/bin/npm"
         - "/usr/bin/node"
         - "/usr/bin/nodejs"
+        - "/usr/bin/npm"
+        - "/usr/bin/npx"
         - "/usr/local/bin/node"
         - "/usr/local/bin/nodejs"
+        - "/usr/local/bin/npm"
+        - "/usr/local/bin/npx"
+        - "/usr/local/lib/node_modules"
+        - "/usr/local/include/node"
+        - "{{ ansible_ssh_user_home }}/.npm"
+        - "{{ ansible_ssh_user_home }}/.nvm"
 
-    - name: 更新软件源包列表
-      apt:
-        update_cache: yes
-        cache_valid_time: 3600
+    # 删除~/.bashrc中的：  
+    # export NVM_DIR="$HOME/.nvm"
+    # [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+    # [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
-    - name: 安装nodejs、npm
-      apt:
-        name:
-          - nodejs # v12.22.9
-          - npm # 8.19.2
-        state: present
+    - name: 下载nvm安装脚本
+      include_tasks: util_wget_proxy.yml
+      vars:
+        wget_url: "https://raw.githubusercontent.com/nvm-sh/nvm/{{ nvm_version }}/install.sh"
+        wget_dir: "/tmp/nvm_install.sh"
+
+    - name: 安装nvm
+      shell: |
+        bash /tmp/nvm_install.sh
+      become_user: "{{ ansible_ssh_user }}"
+
+    - name: 安装nodejs、npm # nvm ls-remote --lts 查看支持的版本
+      shell: |
+        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        nvm install {{ nodejs_version }}
+      become_user: "{{ ansible_ssh_user }}"
+
+    # - name: 更新软件源包列表
+    #   apt:
+    #     update_cache: yes
+    #     cache_valid_time: 3600
+
+    # - name: 安装nodejs、npm
+    #   apt:
+    #     name:
+    #       - nodejs # v12.22.9
+    #       - npm # 8.19.2
+    #     state: present
 
     - name: npm清理缓存
-      command:
-        cmd: "/usr/bin/npm cache clear --force"
-        chdir: "{{ ansible_ssh_user_home }}"
+      shell: |
+        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        npm cache clear --force
       become_user: "{{ ansible_ssh_user }}"
 
     - name: npm设置仓库
-      command:
-        cmd: "/usr/bin/npm config set registry {{ nodejs_warehouse }}"
-        chdir: "{{ ansible_ssh_user_home }}"
+      shell: |
+        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        npm config set registry {{ nodejs_warehouse }}
       become_user: "{{ ansible_ssh_user }}"
 
         #- name: npm设置http代理
@@ -60,40 +98,41 @@
         #  become_user: "{{ ansible_ssh_user }}"
 
     - name: npm安装相关工具
-      command:
-        cmd: "/usr/bin/npm install -g {{ item }}"
-        chdir: "{{ ansible_ssh_user_home }}"
+      shell: |
+        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        npm install -g {{ item }}
       environment:
         HTTP_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
         HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
       loop:
-        - "n@9.1.0"
+        # - "n@9.1.0"
         - "json@11.0.0"
         - "yarn@1.22.19"
         - "bash-language-server"
-      #become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ ansible_ssh_user }}"
       register: npm_install_result
       until: npm_install_result.failed == false
       retries: 3
       delay: 3
 
-    - name: 使用n升级node # 这里执行升级后，很有可能导致npm报错，需要注意n的版本
-      command:
-        cmd: "/usr/local/bin/n 16.18.0" # n stable 或 n 14.14.0
-        chdir: "{{ ansible_ssh_user_home }}"
-      environment:
-        HTTP_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-        HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-      #become_user: "{{ ansible_ssh_user }}"
-      register: n_update_result
-      until: n_update_result.failed == false
-      retries: 3
-      delay: 3
+    # - name: 使用n升级node # 这里执行升级后，很有可能导致npm报错，需要注意n的版本
+    #   command:
+    #     cmd: "/usr/local/bin/n 16.18.0" # n stable 或 n 14.14.0
+    #     chdir: "{{ ansible_ssh_user_home }}"
+    #   environment:
+    #     HTTP_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    #     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+    #   #become_user: "{{ ansible_ssh_user }}"
+    #   register: n_update_result
+    #   until: n_update_result.failed == false
+    #   retries: 3
+    #   delay: 3
 
     - name: 测试结果
-      command:
-        cmd: "npm ls -g"
-        chdir: "{{ ansible_ssh_user_home }}"
+      shell: |
+        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        npm ls -g
+      become_user: "{{ ansible_ssh_user }}"
       register: npm_ls_result
 
     - name: 输出测试结果
