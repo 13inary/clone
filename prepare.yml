@@ -10,7 +10,7 @@
 
     - name: 检查clash配置是否存在
       fail:
-        msg: "clash配置url为空且本地clash配置文件不存在"
+        msg: "clash配置url为空 且本地clash配置文件 {{ local_clash_config }} 不存在"
       when: >
         not clash_config_url | default('') and
         not local_clash_file.stat.exists
