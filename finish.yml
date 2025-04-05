@@ -4,5 +4,5 @@
   any_errors_fatal: true
   tasks:
     - name: 发出完成声音
-      local_action: shell spd-say "completed"
+      local_action: shell spd-say "completed, you need change the password"
 
