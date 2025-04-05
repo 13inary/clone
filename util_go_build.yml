@@ -7,7 +7,7 @@
     GOPATH: "/opt/go"
     GOPROXY: "https://goproxy.cn,direct"
     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-  become_user: "{{ ansible_ssh_user }}"
+  become_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
   register: command_result
   until: command_result.failed == false
   retries: 3

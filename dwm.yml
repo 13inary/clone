@@ -2,6 +2,11 @@
 - name: 部署dwm
   hosts: ubuntu_22
   become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
   any_errors_fatal: true
   tasks:
     - name: 卸载残留的dwm
@@ -17,9 +22,9 @@
       loop:
         - "/tmp/dwm"
         - "/usr/local/dwmScript"
-        - "{{ ansible_ssh_user_home }}/Pictures/wallpapers"
-        - "{{ ansible_ssh_user_home }}/Pictures/screenshot"
-        - "{{ ansible_ssh_user_home }}/.config/flameshot"
+        - "{{ current_user_home }}/Pictures/wallpapers"
+        - "{{ current_user_home }}/Pictures/screenshot"
+        - "{{ current_user_home }}/.config/flameshot"
 
     - name: 更新软件源包列表
       apt:
@@ -59,7 +64,7 @@
       command:
         cmd: "/usr/bin/make clean install"
         chdir: "/tmp/dwm"
-          #become_user: "{{ ansible_ssh_user }}" # 不能使用这个
+          #become_user: "{{ current_user }}" # 不能使用这个
 
     - name: 安装dwm运行工具
       command:
@@ -67,58 +72,58 @@
 
     - name: 创建flameshot配置目录
       file:
-        path: "{{ ansible_ssh_user_home }}/.config/flameshot"
+        path: "{{ current_user_home }}/.config/flameshot"
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0755'
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 创建flameshot配置
       blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.config/flameshot/flameshot.ini"
+        path: "{{ current_user_home }}/.config/flameshot/flameshot.ini"
         block: |
           [General]
           buttons=@Variant(\0\0\0\x7f\0\0\0\vQList<int>\0\0\0\0\t\0\0\0\x1\0\0\0\x2\0\0\0\x3\0\0\0\x5\0\0\0\x12\0\0\0\xf\0\0\0\x16\0\0\0\x13\0\0\0\x17)
           contrastOpacity=188
           drawColor=#ff00ff
           filenamePattern=_%Y_%m_%d_%H_%M_%S
-          savePath={{ ansible_ssh_user_home }}/Pictures/screenshot
+          savePath={{ current_user_home }}/Pictures/screenshot
           savePathFixed=true
           showHelp=false
         marker: "# {mark} flameshot BLOCK"
         create: yes
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: "644"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 创建feh壁纸目录
       file:
-        path: "{{ ansible_ssh_user_home }}/Pictures/wallpapers"
+        path: "{{ current_user_home }}/Pictures/wallpapers"
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0755'
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置feh壁纸
       ansible.builtin.copy:
         src: ./pkg/bridge.jpg
-        dest: "{{ ansible_ssh_user_home }}/Pictures/wallpapers/bridge.jpg"
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        dest: "{{ current_user_home }}/Pictures/wallpapers/bridge.jpg"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0644'
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 创建flameshot、scrot截图目录
       file:
-        path: "{{ ansible_ssh_user_home }}/Pictures/screenshot"
+        path: "{{ current_user_home }}/Pictures/screenshot"
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0755'
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置休眠、关机建
       blockinfile:
@@ -131,10 +136,10 @@
 
     - name: 将当前普通用户追加到视频组
       ansible.builtin.user:
-        name: "{{ ansible_ssh_user }}"
+        name: "{{ current_user }}"
         groups: video
         append: yes
-      when: ansible_ssh_user != "root"
+      when: current_user != "root"
 
     - name: 配置startx
       blockinfile:
@@ -151,14 +156,14 @@
 
     - name: 配置登陆终端启动startx（检查是否对ssh有影响）
       blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.bash_login"
+        path: "{{ current_user_home }}/.bash_login"
         block: |
           startx
         marker: "# {mark} dwm BLOCK"
         create: yes
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
-      become_user: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置开机终端的样式
       lineinfile:

@@ -2,6 +2,11 @@
 - name: 部署compton
   hosts: ubuntu_22
   become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
   any_errors_fatal: true
   tasks:
     - name: 卸载旧的compton
@@ -15,7 +20,7 @@
         path: "{{ item }}"
         state: absent
       loop:
-        - "{{ ansible_ssh_user_home }}/.config/compton-config"
+        - "{{ current_user_home }}/.config/compton-config"
 
     - name: 更新软件源包列表
       apt:
@@ -33,6 +38,6 @@
       include_tasks: util_git_clone.yml
       vars:
         git_repo_url: "https://github.com/gvls/compton-config.git"
-        git_repo_dir: "{{ ansible_ssh_user_home }}/.config/compton-config" # --no-startup-id compton --config ~/.config/compton/compton.conf
+        git_repo_dir: "{{ current_user_home }}/.config/compton-config" # --no-startup-id compton --config ~/.config/compton/compton.conf
 
 

@@ -2,6 +2,11 @@
 - name: 配置theme
   hosts: ubuntu_22
   become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
   any_errors_fatal: true
   tasks:
     - name: 安装主体控制工具
@@ -24,12 +29,12 @@
 #" >> $myManual
     - name: 配置gtk2
       blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.gtkrc-2.0"
+        path: "{{ current_user_home }}/.gtkrc-2.0"
         block: |
           # DO NOT EDIT! This file will be overwritten by LXAppearance.
           # Any customization should be done in ~/.gtkrc-2.0.mine instead.
 
-          include "{{ ansible_ssh_user_home }}/.gtkrc-2.0.mine"
+          include "{{ current_user_home }}/.gtkrc-2.0.mine"
           gtk-theme-name="Yaru-viridian-dark"
           gtk-icon-theme-name="Yaru-viridian-dark"
           gtk-font-name="Sans 20"
@@ -46,14 +51,14 @@
           gtk-xft-hintstyle="hintfull"
         marker: "# {mark} lxappearance BLOCK"
         create: yes
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: "664"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置gtk3
       blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.config/gtk-3.0/settings.ini"
+        path: "{{ current_user_home }}/.config/gtk-3.0/settings.ini"
         block: |
           [Settings]
           gtk-theme-name=Yaru-viridian-dark
@@ -72,23 +77,23 @@
           gtk-xft-hintstyle=hintfull
         marker: "# {mark} lxappearance BLOCK"
         create: yes
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: "664"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 创建icons壁纸目录
       file:
-        path: "{{ ansible_ssh_user_home }}/.icons/default"
+        path: "{{ current_user_home }}/.icons/default"
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0775'
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置icons
       blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.icons/default/index.theme"
+        path: "{{ current_user_home }}/.icons/default/index.theme"
         block: |
           # This file is written by LXAppearance. Do not edit.
           [Icon Theme]
@@ -97,16 +102,16 @@
           Inherits=DMZ-Black
         marker: "# {mark} lxappearance BLOCK"
         create: yes
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: "664"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置时间
       shell:
-        cmd: "/usr/bin/date +%s > {{ ansible_ssh_user_home }}/.cache/tracker3/files/last-crawl.txt"
-        chdir: "{{ ansible_ssh_user_home }}"
-      become_user: "{{ ansible_ssh_user }}"
+        cmd: "/usr/bin/date +%s > {{ current_user_home }}/.cache/tracker3/files/last-crawl.txt"
+        chdir: "{{ current_user_home }}"
+      become_user: "{{ current_user }}"
 
 #echo "##  qt5ct
 ####   appearance
@@ -121,16 +126,16 @@
 #" >> $myManual
     - name: 创建icons壁纸目录
       file:
-        path: "{{ ansible_ssh_user_home }}/.config/qt5ct"
+        path: "{{ current_user_home }}/.config/qt5ct"
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0775'
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置qt5ct配置
       blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.config/qt5ct/qt5ct.conf"
+        path: "{{ current_user_home }}/.config/qt5ct/qt5ct.conf"
         block: |
           # This file is written by LXAppearance. Do not edit.
           [Appearance]
@@ -166,16 +171,16 @@
           ignored_applications=@Invalid()
         marker: "# {mark} qt5ct BLOCK"
         create: yes
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: "664"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置时间2
       shell:
-        cmd: "/usr/bin/date +%s > {{ ansible_ssh_user_home }}/.cache/tracker3/files/last-crawl.txt"
-        chdir: "{{ ansible_ssh_user_home }}"
-      become_user: "{{ ansible_ssh_user }}"
+        cmd: "/usr/bin/date +%s > {{ current_user_home }}/.cache/tracker3/files/last-crawl.txt"
+        chdir: "{{ current_user_home }}"
+      become_user: "{{ current_user }}"
 
     - name: 配置QT主题模块
       blockinfile:

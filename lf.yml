@@ -2,6 +2,11 @@
 - name: 部署lf
   hosts: ubuntu_22
   become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
   any_errors_fatal: true
   tasks:
     - name: 卸载旧的lf依赖
@@ -44,7 +49,7 @@
         path: "{{ item }}"
         state: absent
       loop:
-        - "{{ ansible_ssh_user_home }}/.config/lf"
+        - "{{ current_user_home }}/.config/lf"
         - /tmp/ctpv
         - /opt/go/pkg/mod/cache/download/github.com/gdamore
 
@@ -80,7 +85,7 @@
       command:
         cmd: "/usr/bin/make install"
         chdir: "/tmp/ctpv"
-          #become_user: "{{ ansible_ssh_user }}" # 不能使用这个
+          #become_user: "{{ current_user }}" # 不能使用这个
 
     # - name: 安装ueberzug
     #   ansible.builtin.pip:
@@ -118,13 +123,13 @@
       command:
         cmd: "/usr/bin/python3 setup.py install --user"
         chdir: "/tmp/ueberzug"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 安装 ueberzug step3
       command:
         cmd: "/usr/bin/python3 -m site --user-base"
         chdir: "/tmp/ueberzug"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
     
     - name: 配置 ueberzug 环境变量
       blockinfile:
@@ -149,7 +154,7 @@
     #     GOPATH: "/opt/go"
     #     GOPROXY: "https://goproxy.cn,direct"
     #     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-    #   become_user: "{{ ansible_ssh_user }}"
+    #   become_user: "{{ current_user }}"
     #   register: command_result
     #   until: command_result.failed == false
     #   retries: 3
@@ -163,7 +168,7 @@
     #     GOPATH: "/opt/go"
     #     GOPROXY: "https://goproxy.cn,direct"
     #     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-    #   become_user: "{{ ansible_ssh_user }}"
+    #   become_user: "{{ current_user }}"
     #   register: command_result
     #   until: command_result.failed == false
     #   retries: 3
@@ -173,11 +178,11 @@
       include_tasks: util_git_clone.yml
       vars:
         git_repo_url: "https://github.com/gvls/lf.git"
-        git_repo_dir: "{{ ansible_ssh_user_home }}/.config/lf"
+        git_repo_dir: "{{ current_user_home }}/.config/lf"
 
     - name: 配置lf启动配置
       blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.bashrc"
+        path: "{{ current_user_home }}/.bashrc"
         block: |
           LFCD="$HOME/.config/lf/lfcd.sh"
           if [ -f "$LFCD" ]; then
@@ -186,6 +191,6 @@
           fi
         marker: "# {mark} lf BLOCK"
         create: yes
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
-      become_user: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
+      become_user: "{{ current_user }}"

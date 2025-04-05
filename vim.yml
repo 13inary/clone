@@ -2,6 +2,11 @@
 - name: 部署vim
   hosts: ubuntu_22
   become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
   any_errors_fatal: true
   tasks:
     - name: 添加9.0版本的vim仓库
@@ -23,7 +28,7 @@
         path: "{{ item }}"
         state: absent
       loop:
-        # - "{{ ansible_ssh_user_home }}/.vim"
+        # - "{{ current_user_home }}/.vim"
         - "/usr/local/vim"
       when: true
 
@@ -61,8 +66,8 @@
       ansible.builtin.file:
         path: /usr/local/vim
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         recurse: yes
 
     - name: 链接vim配置到vim
@@ -77,20 +82,20 @@
     #   ansible.builtin.file:
     #     path: /usr/local/vim/plugged
     #     state: directory
-    #     owner: "{{ ansible_ssh_user }}"
-    #     group: "{{ ansible_ssh_user }}"
+    #     owner: "{{ current_user }}"
+    #     group: "{{ current_user }}"
 
     # - name: 创建vim的coc数据目录
     #   ansible.builtin.file:
     #     path: /usr/local/vim/cocData
     #     state: directory
-    #     owner: "{{ ansible_ssh_user }}"
-    #     group: "{{ ansible_ssh_user }}"
+    #     owner: "{{ current_user }}"
+    #     group: "{{ current_user }}"
 
     - name: 测试结果
       command:
         cmd: "/usr/bin/vim --version"
-        chdir: "{{ ansible_ssh_user_home }}"
+        chdir: "{{ current_user_home }}"
       register: vim_version_result
 
     - name: 输出测试结果

@@ -2,6 +2,11 @@
 - name: 部署qrcp
   hosts: ubuntu_22
   become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
   any_errors_fatal: true
   tasks:
     - name: 删除残留的qrcp
@@ -10,7 +15,7 @@
         state: absent
       loop:
         - "/tmp/qrcp.deb"
-        - "{{ ansible_ssh_user_home }}/.config/qrcp"
+        - "{{ current_user_home }}/.config/qrcp"
 
     - name: 下载qrcp
       include_tasks: util_wget_proxy.yml
@@ -36,12 +41,12 @@
 
     - name: 创建qrcp配置目录
       file:
-        path: "{{ ansible_ssh_user_home }}/.config/qrcp"
+        path: "{{ current_user_home }}/.config/qrcp"
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0775'
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
         #- name: 收集网卡信息
         #  setup:
@@ -61,8 +66,8 @@
     - name: 配置qrcp配置
       template:
         src: ./pkg/qrcp.json
-        dest: "{{ ansible_ssh_user_home }}/.config/qrcp/config.json"
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        dest: "{{ current_user_home }}/.config/qrcp/config.json"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: "664"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"

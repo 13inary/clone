@@ -9,7 +9,7 @@
     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
     https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
     http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-  become_user: "{{ ansible_ssh_user }}"
+  become_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
   register: command_result
   until: command_result.failed == false
   retries: 3

@@ -4,13 +4,13 @@
     url: "{{ wget_url }}"
     dest: "{{ wget_dir }}"
     mode: '0644'
-      #owner: "{{ ansible_ssh_user }}"
-      #group: "{{ ansible_ssh_user }}"
+      #owner: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+      #group: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
   environment:
     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
     https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
     http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-  become_user: "{{ ansible_ssh_user }}"
+  become_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
   register: command_result
   until: command_result.failed == false
   retries: 3

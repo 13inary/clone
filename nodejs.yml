@@ -4,6 +4,10 @@
   become: yes
   any_errors_fatal: true
   vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
     nodejs_version: "v20.19.0"
     nvm_version: "v0.40.2"
   tasks:
@@ -16,9 +20,9 @@
 
     - name: 卸载nvm的nodejs、npm
       shell: |
-        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        . "{{ current_user_home }}/.nvm/nvm.sh"
         nvm uninstall {{ nodejs_version }}
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
       ignore_errors: true
 
     - name: 删除残留的nodejs和npm
@@ -36,8 +40,8 @@
         - "/usr/local/bin/npx"
         - "/usr/local/lib/node_modules"
         - "/usr/local/include/node"
-        - "{{ ansible_ssh_user_home }}/.npm"
-        - "{{ ansible_ssh_user_home }}/.nvm"
+        - "{{ current_user_home }}/.npm"
+        - "{{ current_user_home }}/.nvm"
 
     # 删除~/.bashrc中的：  
     # export NVM_DIR="$HOME/.nvm"
@@ -53,13 +57,13 @@
     - name: 安装nvm
       shell: |
         bash /tmp/nvm_install.sh
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: 安装nodejs、npm # nvm ls-remote --lts 查看支持的版本
       shell: |
-        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        . "{{ current_user_home }}/.nvm/nvm.sh"
         nvm install {{ nodejs_version }}
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     # - name: 更新软件源包列表
     #   apt:
@@ -75,31 +79,31 @@
 
     - name: npm清理缓存
       shell: |
-        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        . "{{ current_user_home }}/.nvm/nvm.sh"
         npm cache clear --force
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
     - name: npm设置仓库
       shell: |
-        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        . "{{ current_user_home }}/.nvm/nvm.sh"
         npm config set registry {{ nodejs_warehouse }}
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
         #- name: npm设置http代理
         #  command:
         #    cmd: "/usr/bin/npm config set proxy {{ clash_proxy_url }}:{{ clash_proxy_port }}"
-        #    chdir: "{{ ansible_ssh_user_home }}"
-        #  become_user: "{{ ansible_ssh_user }}"
+        #    chdir: "{{ current_user_home }}"
+        #  become_user: "{{ current_user }}"
 
         #- name: npm设置https代理
         #  command:
         #    cmd: "/usr/bin/npm config set https-proxy {{ clash_proxy_url }}:{{ clash_proxy_port }}"
-        #    chdir: "{{ ansible_ssh_user_home }}"
-        #  become_user: "{{ ansible_ssh_user }}"
+        #    chdir: "{{ current_user_home }}"
+        #  become_user: "{{ current_user }}"
 
     - name: npm安装相关工具
       shell: |
-        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        . "{{ current_user_home }}/.nvm/nvm.sh"
         npm install -g {{ item }}
       environment:
         HTTP_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
@@ -109,7 +113,7 @@
         - "json@11.0.0"
         - "yarn@1.22.19"
         - "bash-language-server"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
       register: npm_install_result
       until: npm_install_result.failed == false
       retries: 3
@@ -118,11 +122,11 @@
     # - name: 使用n升级node # 这里执行升级后，很有可能导致npm报错，需要注意n的版本
     #   command:
     #     cmd: "/usr/local/bin/n 16.18.0" # n stable 或 n 14.14.0
-    #     chdir: "{{ ansible_ssh_user_home }}"
+    #     chdir: "{{ current_user_home }}"
     #   environment:
     #     HTTP_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
     #     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-    #   #become_user: "{{ ansible_ssh_user }}"
+    #   #become_user: "{{ current_user }}"
     #   register: n_update_result
     #   until: n_update_result.failed == false
     #   retries: 3
@@ -130,9 +134,9 @@
 
     - name: 测试结果
       shell: |
-        . "{{ ansible_ssh_user_home }}/.nvm/nvm.sh"
+        . "{{ current_user_home }}/.nvm/nvm.sh"
         npm ls -g
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
       register: npm_ls_result
 
     - name: 输出测试结果

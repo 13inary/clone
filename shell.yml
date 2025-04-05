@@ -2,16 +2,21 @@
 - name: 部署shell
   hosts: ubuntu_22
   become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
   any_errors_fatal: true
   tasks:
     - name: 配置shell
       blockinfile:
-        path: "{{ ansible_ssh_user_home }}/.bashrc"
+        path: "{{ current_user_home }}/.bashrc"
         block: |
           alias mv='mv -i'
           alias cman='man -M /usr/share/man/zh_CN'
         marker: "# {mark} shell BLOCK"
         create: yes
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
-      become_user: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
+      become_user: "{{ current_user }}"

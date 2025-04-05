@@ -3,8 +3,8 @@
   ansible.builtin.file:
     path: /opt/go/pkg
     state: directory
-    owner: "{{ ansible_ssh_user }}"
-    group: "{{ ansible_ssh_user }}"
+    owner: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    group: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
     recurse: yes
 
 - name: go get {{ go_project }}
@@ -15,7 +15,7 @@
     GOPATH: "/opt/go"
     GOPROXY: "https://goproxy.cn,direct"
     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-  become_user: "{{ ansible_ssh_user }}"
+  become_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
   register: command_result
   until: command_result.failed == false
   retries: 3
@@ -29,7 +29,7 @@
     GOPATH: "/opt/go"
     GOPROXY: "https://goproxy.cn,direct"
     HTTPS_PROXY: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
-  become_user: "{{ ansible_ssh_user }}"
+  become_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
   register: command_result
   until: command_result.failed == false
   retries: 3

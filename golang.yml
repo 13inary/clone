@@ -2,6 +2,11 @@
 - name: 安装golang
   hosts: ubuntu_22
   become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
   any_errors_fatal: true
   tasks:
     - name: 删除原来golang的sdk、数据目录
@@ -23,8 +28,8 @@
         url: "{{ golang_sdk_url }}"
         dest: "/tmp/go-sdk.tar.gz"
         mode: '0644'
-          #owner: "{{ ansible_ssh_user }}"
-          #group: "{{ ansible_ssh_user }}"
+          #owner: "{{ current_user }}"
+          #group: "{{ current_user }}"
       environment: # 处理
         https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
         http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
@@ -66,7 +71,7 @@
           #    - "/usr/local/go/bin/go env -w GO111MODULE=auto"
           #    - "/usr/local/go/bin/go env -w GOPROXY=https://goproxy.cn,direct"
           #    - "/usr/local/go/bin/go env -w GONOPROXY=git.tencent.com,git.code.tencent.com"
-          #  become_user: "{{ ansible_ssh_user }}"
+          #  become_user: "{{ current_user }}"
 
     - name: 检查golang的工作目录是否存在
       stat:
@@ -82,16 +87,16 @@
       file:
         path: "/opt/go/src/example/"
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0700'
 
     - name: 生成golang的工具目录
       file:
         path: "{{ item }}"
         state: directory
-        owner: "{{ ansible_ssh_user }}"
-        group: "{{ ansible_ssh_user }}"
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
         mode: '0775'
       loop:
         - "/opt/go/bin"
@@ -101,5 +106,5 @@
       command:
         cmd: "/usr/local/go/bin/go mod init example"
         chdir: "/opt/go/src/example/"
-      become_user: "{{ ansible_ssh_user }}"
+      become_user: "{{ current_user }}"
 
