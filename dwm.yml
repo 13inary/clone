@@ -52,6 +52,7 @@
           - xinput # 触摸板控制
           #- numlockx # 小键盘锁
           #- wmname # 窗口管理器名字
+          #- xprop # 获取compton需要的窗口信息
         state: present
 
     - name: 下载dwm
