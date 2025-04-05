@@ -1,5 +1,6 @@
 ---
 # prefix
+- import_playbook: prepare.yml
 - import_playbook: souce_ubuntu_22.yml
 - import_playbook: base_soft.yml
 - import_playbook: wget.yml

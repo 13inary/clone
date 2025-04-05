@@ -1,0 +1,16 @@
+---
+- name: 安装基础软件
+  hosts: ubuntu_22
+  any_errors_fatal: true
+  tasks:
+    - name: 检查本地clash配置文件是否存在
+      stat:
+        path: "{{ local_clash_config | default('') }}"
+      register: local_clash_file
+
+    - name: 检查clash配置是否存在
+      fail:
+        msg: "clash配置url为空且本地clash配置文件不存在"
+      when: >
+        not clash_config_url | default('') and
+        not local_clash_file.stat.exists
