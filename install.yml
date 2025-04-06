@@ -38,6 +38,7 @@
 - import_playbook: transmit.yml
 - import_playbook: chrome.yml
 - import_playbook: office.yml
+# - import_playbook: drawio.yml url获取未完成
 
 # software 2
 # - import_playbook: ocr.yml
