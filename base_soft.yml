@@ -76,6 +76,9 @@
           # ssh
           #- openssh-server
           - sshpass
+          # cursor plantuml
+          graphviz
+          openjdk-11-jre
         state: present
       ignore_errors: true
 
