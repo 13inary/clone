@@ -27,8 +27,28 @@
 
     - name: 配置cursor配置
       copy:
-        src: ./pkg/cursor-1.2.1.code-profile
-        dest: "{{ current_user_home }}/Downloads/cursor-1.2.1.code-profile"
+        src: ./pkg/cursor-0.48.7.code-profile
+        dest: "{{ current_user_home }}/Downloads/cursor-0.48.7.code-profile"
+        force: yes
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
+        mode: "664"
+      become_user: "{{ current_user }}"
+
+    - name: 配置cursor配置keybindings
+      copy:
+        src: ./pkg/cursor-1.2.1.keybindings.json
+        dest: "{{ current_user_home }}/Downloads/cursor-1.2.1.keybindings.json"
+        force: yes
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
+        mode: "664"
+      become_user: "{{ current_user }}"
+
+    - name: 配置cursor配置settings
+      copy:
+        src: ./pkg/cursor-1.2.1.settings.json
+        dest: "{{ current_user_home }}/Downloads/cursor-1.2.1.settings.json"
         force: yes
         owner: "{{ current_user }}"
         group: "{{ current_user }}"

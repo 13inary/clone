@@ -1,0 +1,36 @@
+{
+    "application.shellEnvironmentResolutionTimeout": 18, // shell
+    "files.autoSave": "afterDelay",
+    "editor.fontSize": 20,
+    "editor.fontFamily": "'Source Code Pro', 'Droid Sans Mono', 'monospace', monospace",
+    "editor.copyWithSyntaxHighlighting": false, // copy not color
+    "editor.dragAndDrop": false, // move select
+    "editor.fastScrollSensitivity": 10,
+    "editor.scrollbar.horizontalScrollbarSize": 20, // right width
+    "editor.scrollbar.verticalScrollbarSize": 20, // bottom high
+    "editor.scrollBeyondLastLine": false, // have bottom
+    "editor.wrappingIndent": "indent", // cut string to new line
+    "editor.hover.enabled": false,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "workbench.colorTheme": "Default Dark Modern",
+    "workbench.statusBar.visible": false,
+    "workbench.editor.navigationScope": "editorGroup",
+    "workbench.editor.showTabs": "single",
+    // "window.titleBarStyle": "native",
+    "window.customTitleBarVisibility": "never", // have effect for pre line
+    "go.editorContextMenuCommands": {
+        "removeTags": true,
+        "debugTestAtCursor": false,
+        "testAtCursor": false,
+        "fillStruct": true,
+        "playground": false
+    },
+    "go.inlayHints.constantValues": true, // const(
+    "go.inlayHints.ignoredError": true, // client.Close()
+    "go.inlayHints.parameterNames": true, // show(name: name)
+    "go.testTimeout": "180s",
+    "go.testFlags": [
+        "-count=1",
+        "-v"
+    ]
+}
