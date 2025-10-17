@@ -27,8 +27,8 @@
 
     - name: 配置cursor配置
       copy:
-        src: ./pkg/cursor.code-profile
-        dest: "{{ current_user_home }}/Downloads/cursor.code-profile"
+        src: ./pkg/cursor-1.2.1.code-profile
+        dest: "{{ current_user_home }}/Downloads/cursor-1.2.1.code-profile"
         force: yes
         owner: "{{ current_user }}"
         group: "{{ current_user }}"
