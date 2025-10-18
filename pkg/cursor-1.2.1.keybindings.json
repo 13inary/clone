@@ -157,5 +157,16 @@
         "key": "ctrl+m f",
         "command": "-workbench.action.closeFolder",
         "when": "emptyWorkspaceSupport && workbenchState != 'empty'"
+    },
+    // cancel: open file recently
+    {
+        "key": "ctrl+r",
+        "command": "-workbench.action.openRecent"
+    },
+    // add: re run test
+    {
+        "key": "ctrl+r",
+        "command": "testing.reRunLastRun",
+        "when": "editorFocus"
     }
 ]
