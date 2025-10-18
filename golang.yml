@@ -108,3 +108,16 @@
         chdir: "/opt/go/src/example/"
       become_user: "{{ current_user }}"
 
+    - name: 检查gosrc是否存在
+      ansible.builtin.stat:
+        path: "{{ ansible_ssh_user_home }}/Gosrc"
+      register: go_src_check
+
+    - name: 添加软连接给gosrc
+      ansible.builtin.file:
+        src: "/opt/go/src"
+        dest: "{{ ansible_ssh_user_home }}/Gosrc" # 注意目标文件不能已经存在
+        state: link
+        owner: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+        group: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+      when: not go_src_check.stat.exists
