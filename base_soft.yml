@@ -79,6 +79,8 @@
           # cursor plantuml
           graphviz
           openjdk-11-jre
+          # watch to do
+          - inotify-tools
         state: present
       ignore_errors: true
 
