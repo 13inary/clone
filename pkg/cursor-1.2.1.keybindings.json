@@ -139,7 +139,7 @@
     },
     {
         "key": "enter",
-        "command": "editor.action.replaceAll",
+        "command": "editor.action.replaceAll", // may change big case to small case
         "when": "editorFocus && findWidgetVisible && replaceInputFocussed"
     },
     // cancel: exit
