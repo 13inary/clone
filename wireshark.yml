@@ -1,0 +1,22 @@
+---
+- name: 部署wireshark
+  hosts: ubuntu_22
+  become: yes
+  any_errors_fatal: true
+  tasks:
+    - name: 添加wireshark仓库
+      ansible.builtin.command:
+        cmd: add-apt-repository ppa:wireshark-dev/stable -y
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装wireshark
+      apt:
+        name: wireshark
+        state: present
+        update_cache: yes
