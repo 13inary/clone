@@ -18,6 +18,7 @@
     "workbench.editor.showTabs": "single",
     // "window.titleBarStyle": "native",
     "window.customTitleBarVisibility": "never", // have effect for pre line
+    "http.proxy": "http://127.0.0.1:7890",
     "go.editorContextMenuCommands": {
         "removeTags": true,
         "debugTestAtCursor": false,
