@@ -25,9 +25,9 @@ system:
 	ansible-playbook fzf.yml
 	ansible-playbook nodejs.yml
 	ansible-playbook vim.yml
-	ansible-playbook alacritty.yml  # 用户配置
+	# ansible-playbook alacritty.yml  # 用户配置
 	ansible-playbook lf.yml
-	ansible-playbook script.yml # 会删除旧的东西
+	ansible-playbook script.yml # 会删除旧目录，若下面用到该目录，需要注意
 	ansible-playbook front.yml
 	# ansible-playbook st.yml
 	# ansible-playbook lock.yml
@@ -43,7 +43,7 @@ software1:
 	ansible-playbook cursor.yml
 	# ansible-playbook transmit.yml
 	ansible-playbook chrome.yml
-	ansible-playbook office.yml
+	# ansible-playbook office.yml
 	# ansible-playbook drawio.yml  # url获取未完成
 	# ansible-playbook wireshark.yml
 

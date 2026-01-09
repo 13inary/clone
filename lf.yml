@@ -63,6 +63,9 @@
         name:
           - fzf
           - libmagic-dev
+          - libssl-dev # ctpv 依赖
+          - libx11-dev # ueberzug 依赖
+          - libxext-dev # ueberzug 依赖
           - ffmpegthumbnailer
           - python3-pip # 安装ueberzug
           #- highlight
@@ -85,7 +88,7 @@
       command:
         cmd: "/usr/bin/make install"
         chdir: "/tmp/ctpv"
-          #become_user: "{{ current_user }}" # 不能使用这个
+      # become_user: "{{ current_user }}"
 
     # - name: 安装ueberzug
     #   ansible.builtin.pip:

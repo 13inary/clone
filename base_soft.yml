@@ -70,15 +70,15 @@
           #- pdman
           #- powerdesigner
           # kvm
-          - virt-manager
-          - libvirt-daemon
-          - libvirt-clients
+          # - virt-manager
+          # - libvirt-daemon
+          # - libvirt-clients
           # ssh
           #- openssh-server
           - sshpass
           # cursor plantuml
-          graphviz
-          openjdk-11-jre
+          - graphviz
+          - openjdk-11-jre
           # watch to do
           - inotify-tools
         state: present
@@ -91,7 +91,7 @@
           - ed
           - nano
           - gedit
-          - gnome-disk-utility
+          # - gnome-disk-utility
           - evince
           - eog
           #- gnome-screenshot
