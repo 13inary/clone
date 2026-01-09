@@ -40,7 +40,7 @@ system:
 software1:
 	@echo "software 1"
 	ansible-playbook chatbox.yml
-	ansible-playbook cursor.yml
+	ansible-playbook cursor2.yml
 	# ansible-playbook transmit.yml
 	ansible-playbook chrome.yml
 	# ansible-playbook office.yml

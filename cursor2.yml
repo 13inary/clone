@@ -1,0 +1,62 @@
+---
+- name: 部署cursor2 # 来源： https://cursor.com/cn/docs/downloads
+  hosts: ubuntu_22
+  become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
+  any_errors_fatal: true
+  tasks:
+    - name: 创建apt keyrings目录
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: 检查GPG密钥文件是否存在
+      ansible.builtin.stat:
+        path: /etc/apt/keyrings/cursor.gpg
+      register: cursor_gpg_stat
+
+    - name: 下载Cursor GPG密钥
+      ansible.builtin.get_url:
+        url: https://downloads.cursor.com/keys/anysphere.asc
+        dest: /tmp/cursor.gpg.asc
+        mode: '0644'
+      environment:
+        https_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+        http_proxy: "{{ clash_proxy_url }}:{{ clash_proxy_port }}"
+      when: not cursor_gpg_stat.stat.exists
+
+    - name: 转换GPG密钥格式
+      ansible.builtin.shell: |
+        gpg --dearmor < /tmp/cursor.gpg.asc > /etc/apt/keyrings/cursor.gpg
+      args:
+        creates: /etc/apt/keyrings/cursor.gpg
+      when: not cursor_gpg_stat.stat.exists
+
+    - name: 添加Cursor软件源
+      ansible.builtin.lineinfile:
+        path: /etc/apt/sources.list.d/cursor.list
+        line: "deb [arch=amd64,arm64 signed-by=/etc/apt/keyrings/cursor.gpg] https://downloads.cursor.com/aptrepo stable main"
+        regexp: '^deb \[arch=amd64,arm64 signed-by=/etc/apt/keyrings/cursor\.gpg\] https://downloads\.cursor\.com/aptrepo stable main'
+        state: present
+        mode: '0644'
+        create: yes
+
+    - name: 更新apt缓存
+      ansible.builtin.apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装cursor
+      ansible.builtin.apt:
+        name: cursor
+        state: present
+
+    - name: 删除临时GPG密钥文件
+      ansible.builtin.file:
+        path: /tmp/cursor.gpg.asc
+        state: absent
