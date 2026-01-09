@@ -37,6 +37,7 @@ system:
 	# ansible-playbook dwm.yml
 	# ansible-playbook theme.yml
 	# ansible-playbook input_method.yml
+	ansible-playbook input_method_conf.yml
 
 software1:
 	@echo "software 1"
