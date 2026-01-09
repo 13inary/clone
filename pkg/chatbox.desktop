@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=chatbox
+Comment=A description of my application
+Exec=/opt/script/bin/chatbox.AppImage
+Icon=/opt/script/pkg/chatbox_icon.png
+Terminal=false
+Categories=Utility;

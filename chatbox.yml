@@ -30,6 +30,28 @@
         owner: "{{ current_user }}"
         group: "{{ current_user }}"
 
+    - name: 拷贝chatbox.desktop到应用程序目录
+      ansible.builtin.copy:
+        src: ./pkg/chatbox.desktop
+        dest: /usr/share/applications/chatbox.desktop
+        mode: '0644'
+
+    - name: 创建/opt/script/pkg/目录
+      ansible.builtin.file:
+        path: /opt/script/pkg
+        state: directory
+        mode: '0755'
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
+
+    - name: 拷贝chatbox图标到/opt/script/pkg/
+      ansible.builtin.copy:
+        src: ./pkg/chatbox_icon.png
+        dest: /opt/script/pkg/chatbox_icon.png
+        mode: '0644'
+        owner: "{{ current_user }}"
+        group: "{{ current_user }}"
+
     - name: 下载chatbox
       get_url:
         url: "{{ chatbox_bin_url }}"
