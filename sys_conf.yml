@@ -1,0 +1,29 @@
+---
+- name: 配置系统设置
+  hosts: ubuntu_22
+  become: yes
+  vars:
+    current_user: "{{ ansible_ssh_user | default(lookup('env', 'USER'), true) }}"
+    current_pass: "{{ ansible_ssh_pass | default(lookup('env', 'USER'), true) }}"
+    current_become_pass: "{{ ansible_become_pass | default(lookup('env', 'USER'), true) }}"
+    current_user_home: "{{ ansible_ssh_user_home | default(lookup('env', 'HOME'), true) }}"
+  any_errors_fatal: true
+  tasks:
+    - name: 更新软件源包列表
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: 安装dconf-editor
+      apt:
+        name:
+          - dconf-editor # gsettings https://segmentfault.com/a/1190000019968756?utm_source=tag-newest
+        state: present
+
+    - name: 配置GNOME系统设置
+      command:
+        cmd: "{{ item }}"
+      become_user: "{{ current_user }}"
+      loop:
+        - dconf write /org/gnome/mutter/center-new-windows true # gsettings set org.gnome.muter center-new-windows true
+        # 可以添加更多 dconf 配置命令

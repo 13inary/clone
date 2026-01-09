@@ -20,6 +20,7 @@ tool:
 
 system:
 	@echo "system"
+	ansible-playbook sys_conf.yml
 	ansible-playbook shell.yml
 	ansible-playbook firefox.yml
 	ansible-playbook fzf.yml
