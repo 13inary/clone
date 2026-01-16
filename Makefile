@@ -35,6 +35,7 @@ system:
 	# ansible-playbook compton.yml
 	# ansible-playbook dmenu.yml
 	# ansible-playbook dwm.yml
+	ansible-playbook screenshot.yml
 	# ansible-playbook theme.yml
 	# ansible-playbook input_method.yml
 	ansible-playbook input_method_conf.yml

@@ -23,8 +23,6 @@
         - "/tmp/dwm"
         - "/usr/local/dwmScript"
         - "{{ current_user_home }}/Pictures/wallpapers"
-        - "{{ current_user_home }}/Pictures/screenshot"
-        - "{{ current_user_home }}/.config/flameshot"
 
     - name: 更新软件源包列表
       apt:
@@ -39,8 +37,6 @@
           - libcanberra-gtk-module
           - libxft-dev
           - suckless-tools
-          - flameshot # 截图依赖
-          - scrot # 截图依赖
           - feh # 图片管理器。其他工具：habak nitrogen
           #- xsetroot # 状态栏控制。其他工具：dwmblocks
           - brightnessctl # 亮度控制。其他工具：xbrightness light acpilight xbacklight xset
@@ -71,34 +67,6 @@
       command:
         cmd: "cp -r /tmp/dwm/dwmScript /usr/local/dwmScript"
 
-    - name: 创建flameshot配置目录
-      file:
-        path: "{{ current_user_home }}/.config/flameshot"
-        state: directory
-        owner: "{{ current_user }}"
-        group: "{{ current_user }}"
-        mode: '0755'
-      become_user: "{{ current_user }}"
-
-    - name: 创建flameshot配置
-      blockinfile:
-        path: "{{ current_user_home }}/.config/flameshot/flameshot.ini"
-        block: |
-          [General]
-          buttons=@Variant(\0\0\0\x7f\0\0\0\vQList<int>\0\0\0\0\t\0\0\0\x1\0\0\0\x2\0\0\0\x3\0\0\0\x5\0\0\0\x12\0\0\0\xf\0\0\0\x16\0\0\0\x13\0\0\0\x17)
-          contrastOpacity=188
-          drawColor=#ff00ff
-          filenamePattern=_%Y_%m_%d_%H_%M_%S
-          savePath={{ current_user_home }}/Pictures/screenshot
-          savePathFixed=true
-          showHelp=false
-        marker: "# {mark} flameshot BLOCK"
-        create: yes
-        owner: "{{ current_user }}"
-        group: "{{ current_user }}"
-        mode: "644"
-      become_user: "{{ current_user }}"
-
     - name: 创建feh壁纸目录
       file:
         path: "{{ current_user_home }}/Pictures/wallpapers"
@@ -115,15 +83,6 @@
         owner: "{{ current_user }}"
         group: "{{ current_user }}"
         mode: '0644'
-      become_user: "{{ current_user }}"
-
-    - name: 创建flameshot、scrot截图目录
-      file:
-        path: "{{ current_user_home }}/Pictures/screenshot"
-        state: directory
-        owner: "{{ current_user }}"
-        group: "{{ current_user }}"
-        mode: '0755'
       become_user: "{{ current_user }}"
 
     - name: 配置休眠、关机建
