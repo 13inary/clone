@@ -28,7 +28,7 @@
     },
     "go.inlayHints.constantValues": true, // const(
     "go.inlayHints.ignoredError": true, // client.Close()
-    "go.inlayHints.parameterNames": true, // show(name: name)
+    // "go.inlayHints.parameterNames": true, // show(name: name)
     "go.testTimeout": "180s",
     "go.testFlags": [
         "-count=1",
